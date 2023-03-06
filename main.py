@@ -1,5 +1,5 @@
 from flask import Flask, Response, render_template, request, url_for, redirect
-from admin import admin_alert_thread
+# from admin import admin_alert_thread
 from server_retrieval import Serve
 
 
@@ -87,7 +87,7 @@ def home():
 
 
 @app.route('/data')
-def get_game_data():
+def serve_game_data():
     serve = Serve()
     game_data = serve.receive('current_game.json')
     return game_data
