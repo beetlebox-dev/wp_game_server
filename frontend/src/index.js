@@ -330,7 +330,7 @@ function StrikeArea(props) {
         if (strikeNum < props.currentStrikeCount) {
             return (
                 <div key={strikeNum} className="strike-box">
-                    <img src="/red_x.png"/>
+                    <img src={process.env.PUBLIC_URL + "/red_x.png"}/>
                 </div>
             )
         } else {
@@ -358,7 +358,7 @@ function ArrowArea(props) {
     return (
         <div id="arrow-area">
             { steps.map(stepNum => { return (
-                <img key={stepNum} src="/arrow_outline.png"/>
+                <img key={stepNum} src={process.env.PUBLIC_URL + "/arrow_outline.png"}/>
             )})}
         </div>
     )

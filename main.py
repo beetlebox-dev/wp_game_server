@@ -13,7 +13,7 @@ from server_retrieval import Serve
 # CORS(app)
 #
 # Production environment.
-app = Flask(__name__, static_folder="react/build", static_url_path="/")
+app = Flask(__name__, static_folder="frontend/build", static_url_path="/public")
 # React stores public files in the "build" folder, and requests public files from root url path "/".
 
 
@@ -91,6 +91,19 @@ def serve_game_data():
     serve = Serve()
     game_data = serve.receive('current_game.json')
     return game_data
+
+
+@app.route('/map')
+def site_map():
+    links = []
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint == 'static':
+            continue
+        print(rule.endpoint)
+        url = url_for(rule.endpoint, **(rule.defaults or {}))
+        print(url)
+        links.append((url, rule.endpoint))
+    return str(links)
 
 
 # @app.route('/')

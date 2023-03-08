@@ -1,28 +1,15 @@
-.gitignore
-.git
-
-.DS_Store
-.idea/
-__pycache__/
-venv/
-google/
-app-storage-bucket/
-
-
-# For react below:
-
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/react/node_modules
-/react/.pnp
+/node_modules
+/.pnp
 .pnp.js
 
 # testing
-/react/coverage
+/coverage
 
 # production
-/react/build
+/build
 
 # misc
 .DS_Store
