@@ -14,15 +14,16 @@ app-storage-bucket/
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/react/node_modules
-/react/.pnp
+/frontend/node_modules
+/frontend/.pnp
 .pnp.js
 
 # testing
-/react/coverage
+/frontend/coverage
 
-# production
-/react/build
+# development
+/frontend/public
+/frontend/src
 
 # misc
 .DS_Store
