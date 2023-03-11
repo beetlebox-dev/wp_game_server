@@ -50,7 +50,6 @@ class Game extends React.Component {
             stepCount: 1,
             strikeCount: 0,
             prevSynsetsWords: [],
-            // currentSynsetId: startSynsetId,
             currentSynsetConnectWord: -1,
             nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
             targetPointerPhrase: '',
@@ -69,37 +68,29 @@ class Game extends React.Component {
                 this.setState({
                     currentSynsetId: startSynsetId, 
                     targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
-                    status: 'play',
+                    status: 'start',
                 });
                 }, 2000)
 
-                setTimeout(() => {
-                if (this.state.mounted) this.choose();
-                }, 4000)
+                // setTimeout(() => {
+                // if (this.state.mounted) this.choose();
+                // }, 4000)
             });
-
-
-
-        // this.state = {
-        //     status: 'play',
-        //     stepCount: 1,
-        //     strikeCount: 0,
-        //     // prevSynsetsIds: [],
-        //     prevSynsetsWords: [],
-        //     currentSynsetId: startSynsetId,
-        //     currentSynsetConnectWord: -1,
-        //     nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
-        //     targetPointerPhrase: '',
-        //     targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
-        // };
     };
 
     componentDidMount(prevProps) {
         this.setState({mounted: true})
-        if (this.state.status !== 'load') this.choose();
+        // if (this.state.status !== 'load') this.choose();
     };
 
+    startGame() {
+        this.choose();
+        this.setState({status: 'play'})
+        console.log('start game')
+    }
     choose(clickedAorB=null) {  // To init at game start, run choose(null).
+
+        console.log('choose')
 
         // console.log('mounted: ', this.state.mounted)
         // console.log('status: ', this.state.status)
@@ -107,7 +98,7 @@ class Game extends React.Component {
 
         this.setState((prevState) => {
 
-            if (prevState.status !== 'play') return {};
+            if (prevState.status !== 'play' && prevState.status !== 'start') return {};
 
             const stateChangeObj = {};
             const addToPrevSynsetsWords = [];
@@ -130,7 +121,6 @@ class Game extends React.Component {
                     stateChangeObj['strikeCount'] = updatedStrikeCount;
                     if (updatedStrikeCount >= totalStrikes) {
                         stateChangeObj['status'] = 'lose';
-                        // stateChangeObj['prevSynsetsIds'] = prevState.prevSynsetsIds.concat(addToPrevSynsetsWords, [updatedCurrentSynsetId]);
 
                         const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
                         stateChangeObj['prevSynsetsWords'] = prevState.prevSynsetsWords.concat(addToPrevSynsetsWords, [wordsFromClickedToPrev]);
@@ -155,7 +145,6 @@ class Game extends React.Component {
 
             if (['win', 'lose'].includes(updatedPointersObj.result)) {
                 stateChangeObj['status'] = updatedPointersObj.result;
-                // stateChangeObj['prevSynsetsIds'] = prevState.prevSynsetsIds.concat([prevState.currentSynsetId]);
                 if (updatedPointersObj.result === 'win') {
 
                     // return {result: 'win', data: {phrase: pointerPhrase, connectWords: pointerWords}};
@@ -192,8 +181,9 @@ class Game extends React.Component {
 
         console.log('target words: ', this.state.targetWords)
 
-        if (this.state.status !== 'load') {  // Indent all below.
-
+        if (this.state.status === 'load') {  // Indent all below.
+            return (<h1>Loading...</h1>)
+        };
 
         // mounted / will unmount ???? !@#$
         if (['win', 'lose'].includes(this.state.status)) {
@@ -203,21 +193,17 @@ class Game extends React.Component {
         // const prevSynsetsWordsArray = this.state.prevSynsetsIds.map(synsetIndex => gameGraph[synsetIndex][2]);
         const prevSynsetsWordsArray = this.state.prevSynsetsWords;
 
-        // const allCurrentWordsArray = gameGraph[this.state.currentSynsetId][2];
-        // const pruneIndices = [this.state.currentSynsetConnectWord];
-        // for (const aOrB of ['a', 'b']) {
-        //     if (this.state.nextSynsets[aOrB] !== null) {
-        //         pruneIndices.push(this.state.nextSynsets[aOrB].connectWords[0]);
-        //     };
-        // };
-        // const pruneIndicesPruned = pruneArray(pruneIndices, true);
-        // const prunedCurrentWordsArray = pruneIndicesPruned.map(index => allCurrentWordsArray[index]);
-        // const prunedCurrentWords = wordsStrFromArray(prunedCurrentWordsArray);
+        const currentWords = getCurrentWordsToDisplay(this.state) + ' ';
+        let currentPos = '';
+        let currentGloss = '';
 
-        const currentWords = getCurrentWordsToDisplay(this.state);
+        // let startBox = null;
+        let statusBar = null;
+        let nextSynsetArea = null;
 
-        return (
-            <>
+        if (this.state.status !== 'load' && this.state.status !== 'start') {
+
+            statusBar =
                 <div id="stats-bar">
                     <StrikeArea
                         currentStrikeCount={this.state.strikeCount}
@@ -228,20 +214,7 @@ class Game extends React.Component {
                     />
                 </div>
 
-                <WinLoseHeading
-                    status={this.state.status}
-                    stepCount={this.state.stepCount}
-                />
-
-                <PreviousSynsets
-                    synsets={prevSynsetsWordsArray}
-                />
-
-                <CurrentSynset
-                    status={this.state.status}
-                    words={currentWords}
-                />
-
+            nextSynsetArea =
                 <div id="next-synset-area">
                     <div id="next-syn-a-gutter"></div>
                     <div id="next-synsets">
@@ -258,6 +231,62 @@ class Game extends React.Component {
                     </div>
                     <div id="next-syn-b-gutter"></div>
                 </div>
+        } else {
+            currentPos = gameGraph[this.state.currentSynsetId][3];
+            currentGloss = gameGraph[this.state.currentSynsetId][4];    
+        };
+
+        return (
+            <>
+                <StartBox
+                    status={this.state.status}
+                    startGame={() => this.startGame()}
+                />
+
+                {statusBar}
+                {/* <div id="stats-bar">
+                    <StrikeArea
+                        currentStrikeCount={this.state.strikeCount}
+                        totalStrikeCount={totalStrikes}
+                    />
+                    <ArrowArea
+                        currentStepCount={this.state.stepCount}
+                    />
+                </div> */}
+
+                <WinLoseHeading
+                    status={this.state.status}
+                    stepCount={this.state.stepCount}
+                />
+
+                <PreviousSynsets
+                    synsets={prevSynsetsWordsArray}
+                />
+
+                <CurrentSynset
+                    status={this.state.status}
+                    words={currentWords}
+                    pos={currentPos}
+                    gloss={currentGloss}
+                />
+
+                {nextSynsetArea}
+                {/* <div id="next-synset-area">
+                    <div id="next-syn-a-gutter"></div>
+                    <div id="next-synsets">
+                        <NextSynset
+                            id={'b'}
+                            choose={() => this.choose('b')}
+                            gameState={this.state}
+                        />
+                        <NextSynset
+                            id={'a'}
+                            choose={() => this.choose('a')}
+                            gameState={this.state}
+                        />
+                    </div>
+                    <div id="next-syn-b-gutter"></div>
+                </div> */}
 
                 <Target
                     status={this.state.status}
@@ -266,9 +295,6 @@ class Game extends React.Component {
                 />
             </>
         )
-        } else {
-            return(<h1>Loading...</h1>)
-        }
     }
 };
 
@@ -329,6 +355,15 @@ function getFinalWordsToDisplayWin(state, clickedAorB, targetConnectWordIndex) {
     const displayWordIndices = pruneArray([clickedSynsetData.connectWords[1], targetConnectWordIndex], true);
     const wordsArray = displayWordIndices.map(index => allWordsArray[index]);
     return wordsStrFromArray(wordsArray);
+};
+
+
+function StartBox(props) {
+    if (props.status === 'start') {
+        return (
+            <button onClick={props.startGame}>BEGIN</button>
+        )
+    };
 };
 
 
@@ -402,13 +437,29 @@ function PreviousSynsets(props) {
 };
 
 
+//!@#$!@#$!@#$ working here.
 function CurrentSynset(props) {
-    if (props.status === 'play') {
+    // let heading = null;
+    // if (props.status !== 'load') {
+    //     heading = <span id="curr-heading">START</span>;
+    // };
+    if (props.status === 'play' || props.status === 'start') {
+
+        let heading = null;
+        if (props.status === 'start') {
+            heading = <><span id="curr-heading">START</span><br/></>;
+        };
+
         return (
             <div id="curr-synset">
-                <span className="words">{props.words}</span>
+                {heading}
+                <span className="words">{props.words}</span><span className="pos">{props.pos}</span>
+                <br/>
+                <span className="gloss">{props.gloss}</span>
             </div>
         )
+    // } else {
+
     };
 };
 
@@ -439,7 +490,6 @@ function NextSynset(props) {
         const pointerData = props.gameState.nextSynsets[props.id];
         const synsetData = gameGraph[pointerData.id];
         const pointerPhrase = pointerData.phrase;
-        // const pointerSymbol = gameGraph[props.gameState.currentSynsetId][pointerData.group][pointerData.id][0];
         let wordsStr = wordsStrFromArray(synsetData[2], true, [pointerData.connectWords[1]]);
         wordsStr += [' (correct) ', ' (decoy) '][pointerData.group];  // let wordsStr debug !@#$!@#$
         return (
@@ -466,10 +516,13 @@ function Target(props) {
     let targetHeading = null;
     let targetPointerPhrase = <span className="pointer">{props.targetPointerPhrase}</span>
     if (props.status !== 'win') {
-        targetMargin = <div id="target-margin"></div>
+        // targetMargin = <div id="target-margin"></div>
         targetHeading = <span id="target-heading">TARGET</span>;
         targetPointerPhrase = null;
     };
+
+    if (props.status === 'start') targetMargin = <div id="target-margin"></div>
+    else if (props.status === 'play' || props.status === 'lose') targetMargin = <div id="target-margin" className="draw-top-line"></div>
     
     return (
         <>

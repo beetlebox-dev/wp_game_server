@@ -116,12 +116,22 @@ body.win {
   /* color: hsl(133, 0%, 60%); */
   color: hsla(0, 0%, 100%, 70%);
 }
+/* #curr-heading {
+  color: white;
+} */
 #curr-synset {
   border: 5px solid white;
   padding: 2vw 0;
   background-color: hsl(0, 0%, 10%);
+  color: white;
+  /* color: hsl(313, 100%, 50%); */
+}
+#curr-synset .words {
   color: hsl(313, 100%, 50%);
 }
+/* #curr-synset .pos, #curr-synset .gloss {
+  color: white;
+} */
 
 /* Next Synset Area */
 #next-synset-area {
@@ -157,8 +167,11 @@ body.win {
 /* Target Synset Area */
 #target-margin {
   height: 3vw;
-  border-top: 5px solid white;
+  /* border-top: 5px solid white; */
   border-bottom: 5px solid white;
+}
+#target-margin.draw-top-line {
+  border-top: 5px solid white;
 }
 body.lose #target-margin {
   border-color: red;

@@ -10,7 +10,7 @@ from server_retrieval import Serve
 app = Flask(__name__, static_folder="frontend/build", static_url_path="/public")
 # React stores public files in the "build" folder, and requests public files from root url path "/".
 
-# TODO: Development environment only!
+# TODO: For react dev environment only!
 from flask_cors import CORS
 CORS(app)
 
