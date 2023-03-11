@@ -6,15 +6,14 @@ from server_retrieval import Serve
 # Copyright 2021 Johnathan Pennington | All rights reserved.
 
 
-# # Development environment only!
-# from flask_cors import CORS
-# app = Flask(__name__, static_folder="react/public", static_url_path="/")
-# # React stores public files in the "public" folder, and requests public files from root url path "/".
-# CORS(app)
-#
 # Production environment.
 app = Flask(__name__, static_folder="frontend/build", static_url_path="/public")
 # React stores public files in the "build" folder, and requests public files from root url path "/".
+
+# TODO: Development environment only!
+from flask_cors import CORS
+CORS(app)
+
 
 
 # @app.errorhandler(404)

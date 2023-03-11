@@ -16,12 +16,13 @@ import './index.css';
 
 
 console.log(process.env.PUBLIC_URL);
+console.log(process.env.REACT_APP_GAME_DATA_URL);
 
 
 const gameName = 'current_game';
 // const gameDataURL = `http://127.0.0.1:5000/${gameName}.json`;
 // const gameDataURL = `/${gameName}.json`;
-const gameDataURL = `/data`;
+const gameDataURL = process.env.REACT_APP_GAME_DATA_URL;
 
 
 
@@ -57,9 +58,10 @@ class Game extends React.Component {
         };
 
 
+        console.log('fetching:', gameDataURL)
         fetch(gameDataURL)
+            // .then((response) => console.log(response))
             .then((response) => response.json())
-            // .then((data) => gameData = data);
             .then((data) => {
 
                 setTimeout(() => {
@@ -163,9 +165,13 @@ class Game extends React.Component {
                     addToPrevSynsetsWords.push(wordsFromClickedToPrev);
 
                     const allTargetWords = gameGraph[targetSynsetId][2];
-                    const displayTargetWordIndex = updatedPointersObj.data.connectWords[1];
-                    stateChangeObj['targetWords'] = allTargetWords[displayTargetWordIndex];
-
+                    const displayTargetWordIndex = Math.max(updatedPointersObj.data.connectWords[1], 0);  // Change -1 (any word) to 0 (first word).
+                    console.log('allTargetWords:', allTargetWords)
+                    console.log('displayTargetWordIndex:', displayTargetWordIndex)
+                    console.log('allTargetWords[displayTargetWordIndex]:', allTargetWords[displayTargetWordIndex])
+                    stateChangeObj['targetWords'] = allTargetWords[displayTargetWordIndex] + ' ';
+                    // wordsStrFromArray(gameGraph[targetSynsetId][2], true)
+                    
                 } else if (updatedPointersObj.result === 'lose') {
                     const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
                     addToPrevSynsetsWords.push(wordsFromClickedToPrev);
@@ -183,6 +189,8 @@ class Game extends React.Component {
     };
 
     render() {
+
+        console.log('target words: ', this.state.targetWords)
 
         if (this.state.status !== 'load') {  // Indent all below.
 
