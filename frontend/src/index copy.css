@@ -29,7 +29,7 @@ body {
   padding: 3vw;
   font-family: 'roboto_light', sans-serif;
   text-align: center;
-  background-color: hsl(0, 0%, 8%);
+  background-color: black;
 }
 
 body.lose {
@@ -110,6 +110,10 @@ body.win {
   opacity: 70%;
 }
 
+.endpoint-heading {
+  color: hsl(133, 100%, 80%);
+}
+
 /* Previous/Current Synset Areas */
 #prev-synsets {
   margin: 3vw 0;
@@ -120,18 +124,14 @@ body.win {
   color: white;
 } */
 #curr-synset {
-  border: 5px solid hsl(313, 100%, 50%);
+  border: 5px solid white;
   padding: 2vw 0;
-  background-color: hsl(0, 0%, 0%);
+  background-color: hsl(0, 0%, 10%);
   color: white;
   /* color: hsl(313, 100%, 50%); */
 }
-#curr-synset .endpoint-heading {
-  color: hsl(133, 100%, 70%);
-}
-/* #curr-synset .words, #target .words { */
-#curr-synset .words {
-  /* color: hsl(313, 100%, 50%); */
+#curr-synset .words, #target .words {
+  color: hsl(313, 100%, 50%);
 }
 /* #curr-synset .pos, #curr-synset .gloss {
   color: white;
@@ -140,7 +140,6 @@ body.win {
 /* Next Synset Area */
 #next-synset-area {
   display: flex;
-  padding: 0 3vw;
 }
 #next-synsets {
   flex: 18;
@@ -152,12 +151,10 @@ body.win {
   font-weight: bold;
 }
 #next-syn-a-gutter, #next-syn-a-text {
-  background-color: hsl(86, 100%, 12%);
-  color: hsl(86, 100%, 50%);
+  background-color: hsl(86, 100%, 50%);
 }
 #next-syn-b-gutter, #next-syn-b-text {
-  background-color: hsl(180, 100%, 12%);
-  color: hsl(180, 100%, 50%);
+  background-color: hsl(180, 100%, 50%);
 }
 #next-syn-a-text {
   border-top: 5px solid black;
@@ -173,8 +170,8 @@ body.win {
 
 /* Target Synset Area */
 #target-margin {
-  height: 6vw;
-  /* border-top: 5px solid black; */
+  height: 3vw;
+  /* border-top: 5px solid white; */
   /* border-bottom: 5px solid white; */
 }
 #target-margin.draw-top-line {
@@ -186,17 +183,8 @@ body.lose #target-margin {
 #target {
   box-sizing: border-box;
   padding: 3vw;
-  /* opacity: 60%; */
-  /* background-color: hsla(0, 0%, 100%, 70%); */
-  background-color: hsla(313, 0%, 100%, 60%);
-  color: hsl(0, 0%, 0%);
-}
-#target .pointer {
-  color: hsl(133, 100%, 50%);
-  /* color: hsla(313, 100%, 30%); */
-}
-#target .endpoint-heading {
-  color: hsl(133, 100%, 50%);
+  background-color: hsla(0, 0%, 100%, 10%);
+  color: hsl(0, 0%, 100%);
 }
 /* #target .pointer {
   display: none;

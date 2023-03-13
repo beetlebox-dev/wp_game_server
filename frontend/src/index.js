@@ -447,7 +447,7 @@ function CurrentSynset(props) {
 
         let heading = null;
         if (props.status === 'start') {
-            heading = <><span id="curr-heading">START</span><br/></>;
+            heading = <><span className="endpoint-heading">START</span><br/></>;
         };
 
         return (
@@ -517,7 +517,7 @@ function Target(props) {
     let targetPointerPhrase = <span className="pointer">{props.targetPointerPhrase}</span>
     if (props.status !== 'win') {
         // targetMargin = <div id="target-margin"></div>
-        targetHeading = <span id="target-heading">TARGET</span>;
+        targetHeading = <span className="endpoint-heading">TARGET</span>;
         targetPointerPhrase = null;
     };
 
