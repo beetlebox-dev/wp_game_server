@@ -53,7 +53,6 @@ class Game extends React.Component {
             currentSynsetConnectWord: -1,
             nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
             targetPointerPhrase: '',
-            // targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
         };
 
 
@@ -70,7 +69,7 @@ class Game extends React.Component {
                     targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
                     status: 'start',
                 });
-                }, 2000)
+                }, 1000)
 
                 // setTimeout(() => {
                 // if (this.state.mounted) this.choose();
@@ -83,11 +82,27 @@ class Game extends React.Component {
         // if (this.state.status !== 'load') this.choose();
     };
 
-    startGame() {
-        this.choose();
-        this.setState({status: 'play'})
-        console.log('start game')
-    }
+    resetGame() {
+
+        this.setState({
+            stepCount: 1,
+            strikeCount: 0,
+            prevSynsetsWords: [],
+            currentSynsetConnectWord: -1,
+            nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
+            targetPointerPhrase: '',
+            //
+            currentSynsetId: startSynsetId, 
+            targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
+            status: 'start',
+        })
+
+
+        // this.choose();
+        // this.setState({status: 'play'})
+        // console.log('start game')
+    };
+
     choose(clickedAorB=null) {  // To init at game start, run choose(null).
 
         console.log('choose')
@@ -201,6 +216,26 @@ class Game extends React.Component {
         let statusBar = null;
         let nextSynsetArea = null;
 
+        const resetButtons = {start: null, lose: null, win: null};
+        const buttonText = {start: 'BEGIN', lose: 'RESET', win: 'RESET'}[this.state.status];
+        if (this.state.status === 'start') {
+            resetButtons.start = 
+                <ResetButton
+                    text={buttonText}
+                    handleClick={() => {
+                        this.resetGame();
+                        this.choose();
+                        this.setState({status: 'play'});
+                    }}
+                />
+        } else {
+            resetButtons[this.state.status] = 
+                <ResetButton
+                    text={buttonText}
+                    handleClick={() => this.resetGame()}
+                />
+        };
+
         if (this.state.status !== 'load' && this.state.status !== 'start') {
 
             statusBar =
@@ -236,13 +271,13 @@ class Game extends React.Component {
             currentGloss = gameGraph[this.state.currentSynsetId][4];    
         };
 
+        const futureChoiceArea = [];
+        for (let i = 0; i < 6; i++) {
+            futureChoiceArea.push(<div className='a' key={i * 2}></div>, <div className='b' key={i * 2 + 1}></div>)
+        };
+
         return (
             <>
-                <StartBox
-                    status={this.state.status}
-                    startGame={() => this.startGame()}
-                />
-
                 {statusBar}
                 {/* <div id="stats-bar">
                     <StrikeArea
@@ -270,29 +305,21 @@ class Game extends React.Component {
                     gloss={currentGloss}
                 />
 
+                {resetButtons.start}
+                {resetButtons.lose}
+
                 {nextSynsetArea}
-                {/* <div id="next-synset-area">
-                    <div id="next-syn-a-gutter"></div>
-                    <div id="next-synsets">
-                        <NextSynset
-                            id={'b'}
-                            choose={() => this.choose('b')}
-                            gameState={this.state}
-                        />
-                        <NextSynset
-                            id={'a'}
-                            choose={() => this.choose('a')}
-                            gameState={this.state}
-                        />
-                    </div>
-                    <div id="next-syn-b-gutter"></div>
-                </div> */}
+                <div id='future-choice-area'>{futureChoiceArea}</div>
 
                 <Target
                     status={this.state.status}
                     targetPointerPhrase={this.state.targetPointerPhrase}
                     targetWords={this.state.targetWords}
                 />
+
+
+
+                {resetButtons.win}
             </>
         )
     }
@@ -358,12 +385,15 @@ function getFinalWordsToDisplayWin(state, clickedAorB, targetConnectWordIndex) {
 };
 
 
-function StartBox(props) {
-    if (props.status === 'start') {
-        return (
-            <button onClick={props.startGame}>BEGIN</button>
-        )
-    };
+function ResetButton(props) {
+    // if (props.status === 'start') {
+    //     return (
+    //         <button onClick={props.startGame}>BEGIN</button>
+    //     )
+    // };
+    return (
+        <button className='reset-button' onClick={props.handleClick}>{props.text}</button>
+    )
 };
 
 
@@ -521,8 +551,8 @@ function Target(props) {
         targetPointerPhrase = null;
     };
 
-    if (props.status === 'start') targetMargin = <div id="target-margin"></div>
-    else if (props.status === 'play' || props.status === 'lose') targetMargin = <div id="target-margin" className="draw-top-line"></div>
+    // if (props.status === 'start') targetMargin = <div id="target-margin"></div>
+    if (props.status === 'play' || props.status === 'lose') targetMargin = <div id="target-margin" className="draw-top-line"></div>
     
     return (
         <>

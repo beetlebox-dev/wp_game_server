@@ -15,10 +15,24 @@ code {
 
 
 
+
+body {
+  /* Minimum window height with vertical center. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+
+
 /* DEBUG */
 h1 {
   color: white;
 }
+
+
 
 
 
@@ -56,6 +70,17 @@ body.win {
 #win-stats {
   font-weight: normal;
   font-size: small;
+}
+
+
+.reset-button {
+  background-color: white;
+  font-size: 1.5em;
+  font-weight: bold;
+  padding: 0.5em;
+  margin: 1.5em;
+  border-radius: 1em;
+  border: none;
 }
 
 /* Game Stats Bar */
@@ -98,7 +123,7 @@ body.win {
   font-size: 1.4rem;
 }
 .pointer {
-  color: hsl(313, 100%, 50%);
+  color: hsl(313, 100%, 100%);
 }
 .pointer, .pos {
   font-style: italic;
@@ -127,7 +152,7 @@ body.win {
   /* color: hsl(313, 100%, 50%); */
 }
 #curr-synset .endpoint-heading {
-  color: hsl(133, 100%, 70%);
+  color: hsl(313, 100%, 50%);
 }
 /* #curr-synset .words, #target .words { */
 #curr-synset .words {
@@ -140,10 +165,15 @@ body.win {
 /* Next Synset Area */
 #next-synset-area {
   display: flex;
-  padding: 0 3vw;
+  /* margin: 0 3vw; */
+  /* border-left: 5px solid hsl(313, 100%, 80%);
+  border-right: 5px solid hsl(313, 100%, 80%); */
+  border-left: 5px solid white;
+  border-right: 5px solid white;
 }
 #next-synsets {
   flex: 18;
+  cursor: pointer;
 }
 #next-syn-b-gutter, #next-syn-a-gutter {
   flex: 1;
@@ -152,23 +182,57 @@ body.win {
   font-weight: bold;
 }
 #next-syn-a-gutter, #next-syn-a-text {
-  background-color: hsl(86, 100%, 12%);
+  background-color: hsl(86, 100%, 10%);
   color: hsl(86, 100%, 50%);
 }
 #next-syn-b-gutter, #next-syn-b-text {
-  background-color: hsl(180, 100%, 12%);
+  background-color: hsl(180, 100%, 10%);
   color: hsl(180, 100%, 50%);
 }
 #next-syn-a-text {
-  border-top: 5px solid black;
-  border-right: 5px solid black;
+  /* border-top: 5px solid hsl(313, 100%, 80%);
+  border-right: 5px solid hsl(313, 100%, 80%); */
+  border-top: 5px solid white;
+  border-right: 5px solid white;
   padding: 3vw 3vw 3vw 0;
   text-align: left;
 }
 #next-syn-b-text {
-  border-left: 5px solid black;
+  /* border-left: 5px solid hsl(313, 100%, 80%); */
+  border-left: 5px solid white;
   padding: 3vw 0 3vw 3vw;
   text-align: right;
+}
+
+#next-synset-area, #future-choice-area {
+  margin: 0 3vw;
+}
+
+#future-choice-area {
+  box-sizing: border-box;
+
+    /* Match #next-synset-area */
+    border-left: 5px solid white;
+    border-right: 5px solid white;
+}
+
+#future-choice-area .a, #future-choice-area .b {
+  height: 4px;
+
+  /* Match #next-synset-area */
+  /* border-left: 5px solid white;
+  border-right: 5px solid white; */
+}
+
+#future-choice-area :first-child {
+  border-top: 1px solid hsl(180, 100%, 30%);
+}
+
+#future-choice-area .a {
+  border-bottom: 1px solid hsl(86, 100%, 30%);
+}
+#future-choice-area .b {
+  border-bottom: 1px solid hsl(180, 100%, 30%);
 }
 
 /* Target Synset Area */
@@ -188,15 +252,18 @@ body.lose #target-margin {
   padding: 3vw;
   /* opacity: 60%; */
   /* background-color: hsla(0, 0%, 100%, 70%); */
-  background-color: hsla(313, 0%, 100%, 60%);
+  background-color: hsla(313, 0%, 100%, 50%);
   color: hsl(0, 0%, 0%);
+  border: 5px solid hsl(313, 0%, 100%);
 }
 #target .pointer {
-  color: hsl(133, 100%, 50%);
+  color: white;
+  /* color: hsl(133, 100%, 50%); */
   /* color: hsla(313, 100%, 30%); */
 }
 #target .endpoint-heading {
-  color: hsl(133, 100%, 50%);
+  color: white;
+  /* color: hsl(133, 100%, 50%); */
 }
 /* #target .pointer {
   display: none;
