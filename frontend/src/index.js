@@ -249,32 +249,42 @@ class Game extends React.Component {
                     />
                 </div>
 
-            nextSynsetArea =
-                <div id="next-synset-area">
-                    <div id="next-syn-a-gutter"></div>
-                    <div id="next-synsets">
-                        <NextSynset
-                            id={'b'}
-                            choose={() => this.choose('b')}
-                            gameState={this.state}
-                        />
-                        <NextSynset
-                            id={'a'}
-                            choose={() => this.choose('a')}
-                            gameState={this.state}
-                        />
+            const futureChoiceArea = [];
+            for (let i = 0; i < 6; i++) {
+                futureChoiceArea.push(<div className='a' key={i * 2}></div>, <div className='b' key={i * 2 + 1}></div>)
+            };
+
+            if (this.state.status !== 'win' && this.state.status !== 'lose') {
+                nextSynsetArea =
+                    <div id='next-synset-col'>
+                        <div id="next-synset-area">
+                            <div id="next-syn-a-gutter"></div>
+                            <div id="next-synsets">
+                                <NextSynset
+                                    id={'b'}
+                                    choose={() => this.choose('b')}
+                                    gameState={this.state}
+                                />
+                                <NextSynset
+                                    id={'a'}
+                                    choose={() => this.choose('a')}
+                                    gameState={this.state}
+                                />
+                            </div>
+                            <div id="next-syn-b-gutter"></div>
+                        </div>
+                        <div id='future-choice-area'>{futureChoiceArea}</div>
                     </div>
-                    <div id="next-syn-b-gutter"></div>
-                </div>
+            };
         } else {
             currentPos = gameGraph[this.state.currentSynsetId][3];
             currentGloss = gameGraph[this.state.currentSynsetId][4];    
         };
 
-        const futureChoiceArea = [];
-        for (let i = 0; i < 6; i++) {
-            futureChoiceArea.push(<div className='a' key={i * 2}></div>, <div className='b' key={i * 2 + 1}></div>)
-        };
+        // const futureChoiceArea = [];
+        // for (let i = 0; i < 6; i++) {
+        //     futureChoiceArea.push(<div className='a' key={i * 2}></div>, <div className='b' key={i * 2 + 1}></div>)
+        // };
 
         return (
             <>
@@ -309,7 +319,7 @@ class Game extends React.Component {
                 {resetButtons.lose}
 
                 {nextSynsetArea}
-                <div id='future-choice-area'>{futureChoiceArea}</div>
+                {/* <div id='future-choice-area'>{futureChoiceArea}</div> */}
 
                 <Target
                     status={this.state.status}
