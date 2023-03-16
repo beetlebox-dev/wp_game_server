@@ -1,3 +1,4 @@
+import time
 from flask import Flask, Response, render_template, request, url_for, redirect
 # from admin import admin_alert_thread
 from server_retrieval import Serve
@@ -10,9 +11,9 @@ from server_retrieval import Serve
 app = Flask(__name__, static_folder="frontend/build", static_url_path="/public")
 # React stores public files in the "build" folder, and requests public files from root url path "/".
 
-# TODO: For react dev environment only!
-from flask_cors import CORS
-CORS(app)
+# # TODO: For react dev environment only!
+# from flask_cors import CORS
+# CORS(app)
 
 
 
@@ -89,6 +90,7 @@ def home():
 def serve_game_data():
     serve = Serve()
     game_data = serve.receive('current_game.json')
+    serve.upload('game_downloaded', time.time())
     return game_data
 
 
