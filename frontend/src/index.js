@@ -49,7 +49,7 @@ class Game extends React.Component {
             mounted: false,
             stepCount: 1,
             strikeCount: 0,
-            prevSynsetsWords: [],
+            prevSynsets: [],
             currentSynsetConnectWord: -1,
             nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
             targetPointerPhrase: '',
@@ -87,7 +87,7 @@ class Game extends React.Component {
         this.setState({
             stepCount: 1,
             strikeCount: 0,
-            prevSynsetsWords: [],
+            prevSynsets: [],
             currentSynsetConnectWord: -1,
             nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
             targetPointerPhrase: '',
@@ -116,21 +116,25 @@ class Game extends React.Component {
             if (prevState.status !== 'play' && prevState.status !== 'start') return {};
 
             const stateChangeObj = {};
-            const addToPrevSynsetsWords = [];
+            const addToprevSynsets = [];
             let pointerRoot;
 
             if (clickedAorB !== null) {
                 // updatedNextSynsetsObj[aOrB] = {group: pointerGroup, id: pointerIndex, phrase: pointerPhrase, connectWords: pointerWords};
 
+                const nextSynsetData = prevState.nextSynsets[clickedAorB];
+
                 // Update stepCount and currentSynsetId.
-                const updatedCurrentSynsetId = prevState.nextSynsets[clickedAorB].id;
+                const updatedCurrentSynsetId = nextSynsetData.id;
                 stateChangeObj['currentSynsetId'] = updatedCurrentSynsetId;
                 stateChangeObj['stepCount'] = prevState.stepCount + 1;
-                stateChangeObj['currentSynsetConnectWord'] = prevState.nextSynsets[clickedAorB].connectWords[1];
+                stateChangeObj['currentSynsetConnectWord'] = nextSynsetData.connectWords[1];
                 const wordsFromCurrToPrev = getCurrentWordsToDisplay(prevState, clickedAorB);
-                addToPrevSynsetsWords.push(wordsFromCurrToPrev);
+                const pointerPhraseFromCurrToPrev = prevState.nextSynsets[clickedAorB].phrase;
+                const prevSynsetObj = {words: wordsFromCurrToPrev, pointer: pointerPhraseFromCurrToPrev};
+                addToprevSynsets.push(prevSynsetObj);
 
-                if (prevState.nextSynsets[clickedAorB].group === 1) {
+                if (nextSynsetData.group === 1) {
                     // Add strike.
                     const updatedStrikeCount = prevState.strikeCount + 1;
                     stateChangeObj['strikeCount'] = updatedStrikeCount;
@@ -138,7 +142,9 @@ class Game extends React.Component {
                         stateChangeObj['status'] = 'lose';
 
                         const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
-                        stateChangeObj['prevSynsetsWords'] = prevState.prevSynsetsWords.concat(addToPrevSynsetsWords, [wordsFromClickedToPrev]);
+                        const pointerPhraseFromClickedToPrev = prevState.nextSynsets[clickedAorB].phrase;
+                        const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: pointerPhraseFromClickedToPrev};
+                        stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets, [finalPrevSynsetObj]);
 
                         console.log('* current words: ', gameGraph[updatedCurrentSynsetId][2])
                         return stateChangeObj;  // Skip updating nextSynsets.
@@ -166,7 +172,9 @@ class Game extends React.Component {
                     stateChangeObj['targetPointerPhrase'] = updatedPointersObj.data.phrase;
 
                     const wordsFromClickedToPrev = getFinalWordsToDisplayWin(prevState, clickedAorB, updatedPointersObj.data.connectWords[0]);
-                    addToPrevSynsetsWords.push(wordsFromClickedToPrev);
+                    const pointerPhraseFromClickedToPrev = prevState.nextSynsets[clickedAorB].phrase;
+                    const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: pointerPhraseFromClickedToPrev};
+                    addToprevSynsets.push(finalPrevSynsetObj);
 
                     const allTargetWords = gameGraph[targetSynsetId][2];
                     const displayTargetWordIndex = Math.max(updatedPointersObj.data.connectWords[1], 0);  // Change -1 (any word) to 0 (first word).
@@ -178,7 +186,10 @@ class Game extends React.Component {
                     
                 } else if (updatedPointersObj.result === 'lose') {
                     const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
-                    addToPrevSynsetsWords.push(wordsFromClickedToPrev);
+                    const pointerPhraseFromClickedToPrev = prevState.nextSynsets[clickedAorB].phrase;
+                    const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: pointerPhraseFromClickedToPrev};
+                    // !@#$!@#$!@#$ NO POINTER!!!!!!!???!!!
+                    addToprevSynsets.push(finalPrevSynsetObj);
                 };
 
             } else {
@@ -187,7 +198,7 @@ class Game extends React.Component {
                 // console.log('* b words: ', gameGraph[updatedPointersObj.data.b.id][2])
             };
 
-            stateChangeObj['prevSynsetsWords'] = prevState.prevSynsetsWords.concat(addToPrevSynsetsWords);
+            stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets);
             return stateChangeObj;
         });
     };
@@ -205,8 +216,8 @@ class Game extends React.Component {
             document.body.classList.add(this.state.status);
         };
 
-        // const prevSynsetsWordsArray = this.state.prevSynsetsIds.map(synsetIndex => gameGraph[synsetIndex][2]);
-        const prevSynsetsWordsArray = this.state.prevSynsetsWords;
+        // const prevSynsetsArray = this.state.prevSynsetsIds.map(synsetIndex => gameGraph[synsetIndex][2]);
+        const prevSynsetsArray = this.state.prevSynsets;
 
         const currentWords = getCurrentWordsToDisplay(this.state) + ' ';
         let currentPos = '';
@@ -305,7 +316,7 @@ class Game extends React.Component {
                 />
 
                 <PreviousSynsets
-                    synsets={prevSynsetsWordsArray}
+                    synsets={prevSynsetsArray}
                 />
 
                 <CurrentSynset
@@ -468,9 +479,9 @@ function WinLoseHeading(props) {
 function PreviousSynsets(props) {
     return (
         <div id="prev-synsets">
-            { props.synsets.map((words, index) => { return (
+            { props.synsets.map((synsetInfo, index) => { return (
                 // <div key={index} className="words">{wordsStrFromArray(words)}</div>
-                <div key={index} className="words">{words}</div>
+                <div key={index} className="words">{synsetInfo.words} {synsetInfo.pointer}</div>
             )})}
         </div>
     )
@@ -531,7 +542,7 @@ function NextSynset(props) {
         const synsetData = gameGraph[pointerData.id];
         const pointerPhrase = pointerData.phrase;
         let wordsStr = wordsStrFromArray(synsetData[2], true, [pointerData.connectWords[1]]);
-        wordsStr += [' (correct) ', ' (decoy) '][pointerData.group];  // let wordsStr debug !@#$!@#$
+        // wordsStr += [' (correct) ', ' (decoy) '][pointerData.group];  // let wordsStr debug !@#$!@#$
         return (
             <div
                 id={elemId}
