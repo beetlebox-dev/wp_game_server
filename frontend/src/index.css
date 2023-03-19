@@ -120,10 +120,14 @@ body.win {
 /* Synset Text Styling */
 .words {
   font-family: Futura, "Century Gothic", sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
 }
-.pointer {
-  color: hsl(313, 100%, 100%);
+
+.pointer, .gloss {
+  font-size: 0.8rem;
+}
+.words, .pos {
+  /* font-size: 1.2rem; */
 }
 .pointer, .pos {
   font-style: italic;
@@ -133,6 +137,8 @@ body.win {
 }
 .gloss {
   opacity: 70%;
+  /* line-height: 0.5rem; */
+  /* font-size: 0.8rem; */
 }
 
 /* Previous/Current Synset Areas */
@@ -141,12 +147,17 @@ body.win {
   /* color: hsl(133, 0%, 60%); */
   color: hsla(0, 0%, 100%, 70%);
 }
+#prev-synsets .pointer {
+  color: hsla(0, 0%, 100%, 50%);
+  font-size: 0.8rem;
+
+}
 /* #curr-heading {
   color: white;
 } */
 #curr-synset {
   border: 5px solid hsl(313, 100%, 50%);
-  padding: 2vw 0;
+  padding: 2vw;
   background-color: hsl(0, 0%, 0%);
   color: white;
   /* color: hsl(313, 100%, 50%); */
@@ -181,6 +192,9 @@ body.win {
 #next-synsets .words {
   font-weight: bold;
 }
+#next-synsets .pointer {
+  color: hsl(313, 100%, 100%);
+}
 #next-syn-a-gutter, #next-syn-a-text {
   background-color: hsl(86, 100%, 10%);
   color: hsl(86, 100%, 50%);
@@ -194,15 +208,16 @@ body.win {
   border-right: 5px solid hsl(313, 100%, 80%); */
   border-top: 5px solid white;
   border-right: 5px solid white;
-  padding: 3vw 3vw 3vw 0;
+  padding: 2vw 2vw 2vw 0;
   text-align: left;
 }
 #next-syn-b-text {
   /* border-left: 5px solid hsl(313, 100%, 80%); */
   border-left: 5px solid white;
-  padding: 3vw 0 3vw 3vw;
+  padding: 2vw 0 2vw 2vw;
   text-align: right;
 }
+
 
 #next-synset-col {
   margin: 0 3vw;
@@ -229,13 +244,15 @@ body.win {
 }
 
 #future-choice-area :first-child {
-  border-top: 1px solid hsl(180, 100%, 22%);
+  border-top: 2px solid hsl(180, 100%, 22%);
 }
 #future-choice-area .b {
-  border-bottom: 1px solid hsl(180, 100%, 22%);
+  border-bottom: 2px solid hsl(180, 100%, 22%);
+  /* background-color: hsl(86, 100%, 15%); */
 }
 #future-choice-area .a {
-  border-bottom: 1px solid hsl(86, 100%, 22%);
+  border-bottom: 2px solid hsl(86, 100%, 22%);
+  /* background-color: hsl(180, 100%, 15%); */
 }
 
 
@@ -253,7 +270,7 @@ body.lose #target-margin {
 }
 #target {
   box-sizing: border-box;
-  padding: 3vw;
+  padding: 2vw;
   /* opacity: 60%; */
   /* background-color: hsla(0, 0%, 100%, 70%); */
   background-color: hsla(313, 0%, 100%, 50%);
