@@ -261,7 +261,7 @@ class Game extends React.Component {
                 </div>
 
             const futureChoiceArea = [];
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 4; i++) {
                 futureChoiceArea.push(<div className='a' key={i * 2}></div>, <div className='b' key={i * 2 + 1}></div>)
             };
 
@@ -533,9 +533,9 @@ function NextSynset(props) {
                 // onClick={props.choose(props.id)}
             >
                 <span className="pointer">pointer</span>
-                <br/>
-                <span className="words">words </span><span className="pos">pos</span>
-                <br/>
+                {/* <br/> */}
+                <span><span className="words">words </span><span className="pos">pos</span></span>
+                {/* <br/> */}
                 <span className="gloss">gloss</span>
             </div>
         )
@@ -555,9 +555,9 @@ function NextSynset(props) {
             >
                 {/* <span className="pointer">{pointerSymbolToPhrase(pointerSymbol)}</span> */}
                 <span className="pointer">{pointerPhrase}</span>
-                <br/>
-                <span className="words">{wordsStr}</span><span className="pos">{synsetData[3]}</span>
-                <br/>
+                {/* <br/> */}
+                <span><span className="words">{wordsStr}</span><span className="pos">{synsetData[3]}</span></span>
+                {/* <br/> */}
                 <span className="gloss">{synsetData[4]}</span>
             </div>
         )
