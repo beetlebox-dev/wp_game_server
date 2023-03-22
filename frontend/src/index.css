@@ -224,6 +224,10 @@ body.win {
   justify-content: center;
   /* transition-duration: 3s;
   transition-property: height; */
+  /* transition-duration: 3s; */
+  transition-property: min-height, max-height;
+  overflow-y: hidden;
+  flex: 0 0 auto;
 }
 
 #next-synset-col {

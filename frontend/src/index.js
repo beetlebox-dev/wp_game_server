@@ -3,6 +3,11 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 
 
+
+const transitionSecs = 3;
+const transitionMaxHeight = '60vh';
+
+
 // New games generate at 6am UTC (10pm Pacific previous day, 3pm Japan day of)
 
 // function pad(number) {
@@ -53,6 +58,8 @@ class Game extends React.Component {
             currentSynsetConnectWord: -1,
             nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
             // targetPointerPhrase: '',
+            prevSynsetsAddedCount: 0,
+
         };
 
 
@@ -80,7 +87,59 @@ class Game extends React.Component {
     componentDidMount(prevProps) {
         this.setState({mounted: true})
         // if (this.state.status !== 'load') this.choose();
-    };
+
+        // setTimeout(() => { 
+        // q('a');
+        // q('b');
+        // }, 0)
+
+        this.xformNewPrevSynsets(this.state.prevSynsetsAddedCount);
+
+    }
+
+    componentDidUpdate(prevProps) {
+    //     // Check if data changed in prevPorps first!
+
+    //     // w('a');
+    //     // w('b');
+    //     // setTimeout(() => { 
+    //     // // w('a');
+    //     // // w('b');
+    //     // q('a');
+    //     // q('b');
+    //     // // w(this.props.id)
+    //     // // q(this.props.id)
+    //     // }, 0)
+        this.xformNewPrevSynsets(this.state.prevSynsetsAddedCount);
+    }
+
+
+
+    xformNewPrevSynsets(addCount) {
+
+        if (addCount < 1) return;
+    
+        for (let elemNum = 0; elemNum < addCount; elemNum++) {
+            const elem = document.querySelector(`xform-${elemNum}`);
+            elem.style.padding = '0'
+            elem.style.margin = '3vw'
+        }
+
+        // #prev-synsets {
+        // margin: 3vw 0;
+        // /* color: hsl(133, 0%, 60%); */
+        // color: hsla(0, 0%, 100%, 70%);
+        // }
+        // #prev-synsets .pointer {
+        // color: hsla(0, 0%, 100%, 50%);
+        // font-size: 0.8rem;
+
+}
+
+        // this.setState({prevSynsetsAddedCount: 0})
+    }
+
+
 
     resetGame() {
 
@@ -95,6 +154,7 @@ class Game extends React.Component {
             currentSynsetId: startSynsetId, 
             targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
             status: 'start',
+            prevSynsetsAddedCount: 0,
         })
 
 
@@ -105,7 +165,7 @@ class Game extends React.Component {
 
     choose(clickedAorB=null) {  // To init at game start, run choose(null).
 
-        console.log('choose')
+        // console.log('choose')
 
         // console.log('mounted: ', this.state.mounted)
         // console.log('status: ', this.state.status)
@@ -147,6 +207,7 @@ class Game extends React.Component {
                         stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets, [finalPrevSynsetObj]);
 
                         console.log('* current words: ', gameGraph[updatedCurrentSynsetId][2])
+                        stateChangeObj['prevSynsetsAddedCount'] = addToprevSynsets.length;
                         return stateChangeObj;  // Skip updating nextSynsets.
                     };
                 };
@@ -178,9 +239,9 @@ class Game extends React.Component {
 
                     const allTargetWords = gameGraph[targetSynsetId][2];
                     const displayTargetWordIndex = Math.max(updatedPointersObj.data.connectWords[1], 0);  // Change -1 (any word) to 0 (first word).
-                    console.log('allTargetWords:', allTargetWords)
-                    console.log('displayTargetWordIndex:', displayTargetWordIndex)
-                    console.log('allTargetWords[displayTargetWordIndex]:', allTargetWords[displayTargetWordIndex])
+                    // console.log('allTargetWords:', allTargetWords)
+                    // console.log('displayTargetWordIndex:', displayTargetWordIndex)
+                    // console.log('allTargetWords[displayTargetWordIndex]:', allTargetWords[displayTargetWordIndex])
                     stateChangeObj['targetWords'] = allTargetWords[displayTargetWordIndex] + ' ';
                     // wordsStrFromArray(gameGraph[targetSynsetId][2], true)
                     
@@ -199,13 +260,14 @@ class Game extends React.Component {
             };
 
             stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets);
+            stateChangeObj['prevSynsetsAddedCount'] = addToprevSynsets.length;
             return stateChangeObj;
         });
     };
 
     render() {
 
-        console.log('target words: ', this.state.targetWords)
+        // console.log('target words: ', this.state.targetWords)
 
         if (this.state.status === 'load') {  // Indent all below.
             return (<h1>Loading...</h1>)
@@ -317,6 +379,7 @@ class Game extends React.Component {
 
                 <PreviousSynsets
                     synsets={prevSynsetsArray}
+                    newCount={prevSynsetsAddedCount}
                 />
 
                 <CurrentSynset
@@ -479,14 +542,20 @@ function WinLoseHeading(props) {
 function PreviousSynsets(props) {
     return (
         <div id="prev-synsets">
-            { props.synsets.map((synsetInfo, index) => { return (
-                // <div key={index} className="words">{wordsStrFromArray(words)}</div>
-                <div key={index}>
-                    <span className="words">{synsetInfo.words}</span>
-                    <br/>
-                    <span className="pointer">{synsetInfo.pointer}</span>
-                </div>
-            )})}
+            { props.synsets.map((synsetInfo, index) => {
+                let className = null;
+                if (index >= props.synsets.length - props.newCount) {
+                    className = `xform xform-${index - props.synsets.length + props.newCount}`;
+                }
+                return (
+                    // <div key={index} className="words">{wordsStrFromArray(words)}</div>
+                    <div key={index} className={className}>
+                        <span className="words">{synsetInfo.words}</span>
+                        <br/>
+                        <span className="pointer">{synsetInfo.pointer}</span>
+                    </div>
+                )
+            })}
         </div>
     )
 };
@@ -519,50 +588,203 @@ function CurrentSynset(props) {
 };
 
 
-function NextSynset(props) {
+class NextSynset extends React.Component {
 
-    if (props.gameState.status !== 'play') return;
+    constructor(props) {
+        super(props);
 
-    const elemId = `next-syn-${props.id}-text`;
+        this.state = {
+            mounted: false,
+        }
+    }
 
-    if (props.gameState.nextSynsets.a === null) {
-        // Return empty html structure. Data not initialized.
-        return (
-            <div
-                id={elemId}
-                // onClick={props.choose(props.id)}
-            >
-                <span className="pointer">pointer</span>
-                {/* <br/> */}
-                <span><span className="words">words </span><span className="pos">pos</span></span>
-                {/* <br/> */}
-                <span className="gloss">gloss</span>
-            </div>
-        )
+    componentDidMount() {
+        this.setState({mounted: true})
 
-    } else {
-        // updatedNextSynsetsObj[aOrB] = {group: pointerGroup, id: pointerIndex, phrase: pointerPhrase, connectWords: pointerWords};
-        const pointerData = props.gameState.nextSynsets[props.id];
-        const synsetData = gameGraph[pointerData.id];
-        const pointerPhrase = pointerData.phrase;
-        let wordsStr = wordsStrFromArray(synsetData[2], true, [pointerData.connectWords[1]]);
-        // wordsStr += [' (correct) ', ' (decoy) '][pointerData.group];  // let wordsStr debug !@#$!@#$
-        return (
-            <div
-                id={elemId}
-                // onClick={props.choose(props.id)}
-                onClick={props.choose}
-            >
-                {/* <span className="pointer">{pointerSymbolToPhrase(pointerSymbol)}</span> */}
-                <span className="pointer">{pointerPhrase}</span>
-                {/* <br/> */}
-                <span><span className="words">{wordsStr}</span><span className="pos">{synsetData[3]}</span></span>
-                {/* <br/> */}
-                <span className="gloss">{synsetData[4]}</span>
-            </div>
-        )
-    };
+        console.log('componentDidMount', this.props.id)
+        w(this.props.id)
+        // setTimeout(() => { 
+        // q(this.props.id)
+        // }, 0)
+    }
+
+    componentDidUpdate(prevProps) {
+        console.log('componentDidUpdate', this.props.id)
+        // // Check if data changed in prevPorps first!
+        w(this.props.id)
+        // setTimeout(() => { 
+        // q(this.props.id)
+        // }, 3000)
+    }
+
+    // getting multiple times! const elemId = `next-syn-${this.props.id}-text`;
+
+    render() {
+
+
+        if (this.props.gameState.status !== 'play') return;
+
+        if (this.state.mounted) {
+            console.log('q render', this.props.id)
+            q(this.props.id)
+        }
+
+        const elemId = `next-syn-${this.props.id}-text`;
+
+        if (this.props.gameState.nextSynsets.a === null) {
+            // Return empty html structure. Data not initialized.
+            return (
+                <div
+                    id={elemId}
+                    // onClick={this.props.choose(this.props.id)}
+                >
+                    <span className="pointer">pointer</span>
+                    {/* <br/> */}
+                    <span><span className="words">words </span><span className="pos">pos</span></span>
+                    {/* <br/> */}
+                    <span className="gloss">gloss</span>
+                </div>
+            )
+
+        } else {
+            // updatedNextSynsetsObj[aOrB] = {group: pointerGroup, id: pointerIndex, phrase: pointerPhrase, connectWords: pointerWords};
+            const pointerData = this.props.gameState.nextSynsets[this.props.id];
+            const synsetData = gameGraph[pointerData.id];
+            const pointerPhrase = pointerData.phrase;
+            let wordsStr = wordsStrFromArray(synsetData[2], true, [pointerData.connectWords[1]]);
+            // wordsStr += [' (correct) ', ' (decoy) '][pointerData.group];  // let wordsStr debug !@#$!@#$
+            return (
+                <div
+                    id={elemId}
+                    // onClick={this.props.choose(this.props.id)}
+                    onClick={this.props.choose}
+                >
+                    {/* <span className="pointer">{pointerSymbolToPhrase(pointerSymbol)}</span> */}
+                    <span className="pointer">{pointerPhrase}</span>
+                    {/* <br/> */}
+                    <span><span className="words">{wordsStr}</span><span className="pos">{synsetData[3]}</span></span>
+                    {/* <br/> */}
+                    <span className="gloss">{synsetData[4]}</span>
+                </div>
+            )
+        };
+    }
 };
+
+
+// function transitionNextSynsetsHeights(id) {
+//     const elemId = `next-syn-${id}-text`;
+//     const elem = document.getElementById(elemId);
+//     // let elemHeight = elem.style.height;
+//     const heightDiff = elem.scrollHeight - elem.clientHeight;
+//     console.log('###########', id)
+//     console.log('elem.scrollHeight', elem.scrollHeight)
+//     console.log('elem.clientHeight', elem.clientHeight)
+//     console.log('heightDiff', heightDiff)
+//     // elem.style.height += heightDiff;
+// };
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'q') { q('a'); q('b'); }
+    else if (event.key === 'w') { w('a'); w('b'); };
+    // transitionNextSynsetsHeights('a')
+    // transitionNextSynsetsHeights('b')
+});
+function q(id) {
+
+    console.log('q', id)
+
+    // if (id === 'b') return
+
+    const elemId = `next-syn-${id}-text`;
+    const elem = document.getElementById(elemId);
+    // console.log(elemId)
+    // console.log(elem)
+    const elemLiveStyles = window.getComputedStyle(elem);
+
+    // console.log('********************')
+
+    // Restrict min/max height to current height instantly.
+    // const currentHeightB = elem.offsetHeight;
+    const currentHeightB = elemLiveStyles.getPropertyValue('height').slice(0, -2);
+    elem.style.minHeight = elem.style.maxHeight = `${currentHeightB}px`;
+    // elem.style.minHeight = elem.style.maxHeight = `40px`;
+    elem.style.transitionDuration = '0s';
+
+    // console.log('currentHeightB', currentHeightB)
+    // console.log('elem.style.minHeight', elem.style.minHeight)
+    // console.log('elem.style.maxHeight', elem.style.maxHeight)
+    // console.log('elem.style.transitionDuration', elem.style.transitionDuration)
+}
+function w(id) {
+
+    // if (id === 'b') return
+
+    console.log('w', id)
+
+
+    const elemId = `next-syn-${id}-text`;
+    const elem = document.getElementById(elemId);
+    // console.log(elemId)
+    // console.log(elem)
+    // const elemLiveStyles = window.getComputedStyle(elem);
+
+    // console.log('********************')
+
+    // Unrestrict min/max height gradually over transition time.
+    elem.style.transitionDuration = `${transitionSecs}s`;
+    elem.style.minHeight = '0';
+    elem.style.maxHeight = transitionMaxHeight;
+
+    // console.log('elem.style.transitionDuration', elem.style.transitionDuration)
+    // console.log('elem.style.minHeight', elem.style.minHeight)
+    // console.log('elem.style.maxHeight', elem.style.maxHeight)
+    // // const currentHeightB = elem.offsetHeight;
+    // const currentHeightB = elemLiveStyles.getPropertyValue('height').slice(0, -2);
+    // console.log('currentHeightB', currentHeightB)
+}
+
+// // let textHeightTransTimeoutId = null;  // GLOBAL
+// function textHeightTrans(elemId) {
+
+//     console.log('********************')
+//     console.log(elemId)
+
+
+//     const transitionSecs = 4;
+
+//     // clearTimeout(textHeightTransTimeoutId);
+
+
+//     const textBoxB = document.getElementById(elemId);
+
+//     // Restrict min/max height to current height instantly.
+//     const currentHeightB = textBoxB.offsetHeight;
+//     textBoxB.style.minHeight = textBoxB.style.maxHeight = `${currentHeightB}px`;
+//     textBoxB.style.transitionDuration = '0s';
+
+//     console.log('textBoxB.style.transitionDuration', textBoxB.style.transitionDuration)
+//     console.log('currentHeightB', currentHeightB)
+//     console.log('textBoxB.style.minHeight', textBoxB.style.minHeight)
+//     console.log('textBoxB.style.maxHeight', textBoxB.style.maxHeight)
+
+
+//     // Unrestrict min/max height gradually over transition time.
+//     textBoxB.style.transitionDuration = `${transitionSecs}s`;
+//     textBoxB.style.minHeight = '0';
+//     textBoxB.style.maxHeight = '100vw';
+
+//     console.log('textBoxB.style.transitionDuration', textBoxB.style.transitionDuration)
+//     console.log('currentHeightB', currentHeightB)
+//     console.log('textBoxB.style.minHeight', textBoxB.style.minHeight)
+//     console.log('textBoxB.style.maxHeight', textBoxB.style.maxHeight)
+
+//     // textHeightTransTimeoutId = setTimeout(function () {
+//     //     textBoxB.style.transitionDuration = '0';
+//     //     const currentHeightB = textBoxB.offsetHeight;
+//     //     textBoxB.style.minHeight = textBoxB.style.maxHeight = `${currentHeightB}px`;
+//     // }, transitionSecs * 1000);
+// }
 
 
 function Target(props) {
