@@ -82,6 +82,9 @@ body.win {
   border-radius: 2rem;
   border: none;
 }
+.reset-button:hover {
+  background-color: hsl(133, 100%, 50%);
+}
 
 /* Game Stats Bar */
 #stats-bar {
@@ -221,11 +224,12 @@ body.win {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  /* transition-duration: 3s;
-  transition-property: height; */
-  /* transition-duration: 3s; */
-  transition-property: min-height, max-height;
+  /* justify-content: center; */
+  /* transition-property: min-height, max-height; */
+  /* transition-timing-function: ease-out; */
+  /* transition-timing-function: linear; */
+  /* transition-timing-function: ease-in; */
+  /* transition-timing-function: cubic-bezier(0.23, 0.68, 0.59, 0.99); */
   overflow-y: hidden;
   flex: 0 0 auto;
 }
@@ -239,6 +243,11 @@ body.win {
   border-left: 5px solid white;
   border-right: 5px solid white;
 }
+#future-choice-area {
+  border-left: 5px solid hsla(0, 0%, 0%, 0%);
+  border-right: 5px solid hsla(0, 0%, 0%, 0%);
+}
+
 /* #next-syn-b-gutter {
   border-right: 5px solid white;
 }

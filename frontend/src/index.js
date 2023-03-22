@@ -4,8 +4,19 @@ import './index.css';
 
 
 
-const transitionSecs = 3;
-const transitionMaxHeight = '60vh';
+
+// Calculate next synsets on game load, so that the words displayed for the start synset doesn't change on "begin"!
+
+
+
+
+
+const minTransSecs = 1;  // The total seconds to transition min-height property from current to 0vh.
+const minMaxTransRatio = 4;
+const maxTransSecs = minTransSecs * minMaxTransRatio;  // The total seconds to transition max-height property from current to 1vh.
+// const transTimingFunc = 'ease-in';
+const transTimingFunc = 'cubic-bezier(0.6, 0, 1, 1)'
+
 
 
 // New games generate at 6am UTC (10pm Pacific previous day, 3pm Japan day of)
@@ -58,7 +69,7 @@ class Game extends React.Component {
             currentSynsetConnectWord: -1,
             nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
             // targetPointerPhrase: '',
-            prevSynsetsAddedCount: 0,
+            // prevSynsetsAddedCount: 0,
 
         };
 
@@ -93,7 +104,7 @@ class Game extends React.Component {
         // q('b');
         // }, 0)
 
-        this.xformNewPrevSynsets(this.state.prevSynsetsAddedCount);
+        // this.xformNewPrevSynsets(this.state.prevSynsetsAddedCount);
 
     }
 
@@ -110,7 +121,7 @@ class Game extends React.Component {
     //     // // w(this.props.id)
     //     // // q(this.props.id)
     //     // }, 0)
-        this.xformNewPrevSynsets(this.state.prevSynsetsAddedCount);
+        // this.xformNewPrevSynsets(this.state.prevSynsetsAddedCount);
     }
 
 
@@ -134,7 +145,7 @@ class Game extends React.Component {
         // color: hsla(0, 0%, 100%, 50%);
         // font-size: 0.8rem;
 
-}
+
 
         // this.setState({prevSynsetsAddedCount: 0})
     }
@@ -154,7 +165,7 @@ class Game extends React.Component {
             currentSynsetId: startSynsetId, 
             targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
             status: 'start',
-            prevSynsetsAddedCount: 0,
+            // prevSynsetsAddedCount: 0,
         })
 
 
@@ -165,6 +176,7 @@ class Game extends React.Component {
 
     choose(clickedAorB=null) {  // To init at game start, run choose(null).
 
+        console.log('################# choose')
         // console.log('choose')
 
         // console.log('mounted: ', this.state.mounted)
@@ -207,7 +219,7 @@ class Game extends React.Component {
                         stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets, [finalPrevSynsetObj]);
 
                         console.log('* current words: ', gameGraph[updatedCurrentSynsetId][2])
-                        stateChangeObj['prevSynsetsAddedCount'] = addToprevSynsets.length;
+                        // stateChangeObj['prevSynsetsAddedCount'] = addToprevSynsets.length;
                         return stateChangeObj;  // Skip updating nextSynsets.
                     };
                 };
@@ -260,7 +272,7 @@ class Game extends React.Component {
             };
 
             stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets);
-            stateChangeObj['prevSynsetsAddedCount'] = addToprevSynsets.length;
+            // stateChangeObj['prevSynsetsAddedCount'] = addToprevSynsets.length;
             return stateChangeObj;
         });
     };
@@ -379,7 +391,7 @@ class Game extends React.Component {
 
                 <PreviousSynsets
                     synsets={prevSynsetsArray}
-                    newCount={prevSynsetsAddedCount}
+                    // newCount={prevSynsetsAddedCount}
                 />
 
                 <CurrentSynset
@@ -543,13 +555,14 @@ function PreviousSynsets(props) {
     return (
         <div id="prev-synsets">
             { props.synsets.map((synsetInfo, index) => {
-                let className = null;
-                if (index >= props.synsets.length - props.newCount) {
-                    className = `xform xform-${index - props.synsets.length + props.newCount}`;
-                }
+                // let className = null;
+                // if (index >= props.synsets.length - props.newCount) {
+                //     className = `xform xform-${index - props.synsets.length + props.newCount}`;
+                // }
                 return (
                     // <div key={index} className="words">{wordsStrFromArray(words)}</div>
-                    <div key={index} className={className}>
+                    <div key={index}>
+                    {/* <div key={index} className={className}> */}
                         <span className="words">{synsetInfo.words}</span>
                         <br/>
                         <span className="pointer">{synsetInfo.pointer}</span>
@@ -602,19 +615,19 @@ class NextSynset extends React.Component {
         this.setState({mounted: true})
 
         console.log('componentDidMount', this.props.id)
-        w(this.props.id)
-        // setTimeout(() => { 
-        // q(this.props.id)
-        // }, 0)
+        // nextSynUnrestrictHeightAfterRender(this.props.id)
+        setTimeout(() => { 
+        nextSynUnrestrictHeightAfterRender(this.props.id)
+        }, 0)
     }
 
     componentDidUpdate(prevProps) {
         console.log('componentDidUpdate', this.props.id)
         // // Check if data changed in prevPorps first!
-        w(this.props.id)
-        // setTimeout(() => { 
-        // q(this.props.id)
-        // }, 3000)
+        // nextSynUnrestrictHeightAfterRender(this.props.id)
+        setTimeout(() => { 
+        nextSynUnrestrictHeightAfterRender(this.props.id)
+        }, 0)
     }
 
     // getting multiple times! const elemId = `next-syn-${this.props.id}-text`;
@@ -624,9 +637,10 @@ class NextSynset extends React.Component {
 
         if (this.props.gameState.status !== 'play') return;
 
+        console.log('before render', this.props.id)
+
         if (this.state.mounted) {
-            console.log('q render', this.props.id)
-            q(this.props.id)
+            nextSynRestrictHeightBeforeRender(this.props.id)
         }
 
         const elemId = `next-syn-${this.props.id}-text`;
@@ -685,14 +699,17 @@ class NextSynset extends React.Component {
 // };
 
 document.addEventListener('keydown', event => {
-    if (event.key === 'q') { q('a'); q('b'); }
-    else if (event.key === 'w') { w('a'); w('b'); };
-    // transitionNextSynsetsHeights('a')
-    // transitionNextSynsetsHeights('b')
-});
-function q(id) {
+    // if (event.key === 'q') { q('a'); q('b'); }
+    // else if (event.key === 'w') { w('a'); w('b'); };
+    // // transitionNextSynsetsHeights('a')
+    // // transitionNextSynsetsHeights('b')
+    nextSynUnrestrictHeightAfterRender('b')
+    nextSynUnrestrictHeightAfterRender('a')
 
-    console.log('q', id)
+});
+function nextSynRestrictHeightBeforeRender(id) {
+
+    console.log('restrict', id)
 
     // if (id === 'b') return
 
@@ -709,18 +726,20 @@ function q(id) {
     const currentHeightB = elemLiveStyles.getPropertyValue('height').slice(0, -2);
     elem.style.minHeight = elem.style.maxHeight = `${currentHeightB}px`;
     // elem.style.minHeight = elem.style.maxHeight = `40px`;
-    elem.style.transitionDuration = '0s';
+    // elem.style.transitionDuration = '0s';
+    elem.style.transition = 'all 0s';
+
 
     // console.log('currentHeightB', currentHeightB)
     // console.log('elem.style.minHeight', elem.style.minHeight)
     // console.log('elem.style.maxHeight', elem.style.maxHeight)
     // console.log('elem.style.transitionDuration', elem.style.transitionDuration)
 }
-function w(id) {
+function nextSynUnrestrictHeightAfterRender(id) {
 
     // if (id === 'b') return
 
-    console.log('w', id)
+    console.log('unrestrict', id)
 
 
     const elemId = `next-syn-${id}-text`;
@@ -732,9 +751,14 @@ function w(id) {
     // console.log('********************')
 
     // Unrestrict min/max height gradually over transition time.
-    elem.style.transitionDuration = `${transitionSecs}s`;
-    elem.style.minHeight = '0';
-    elem.style.maxHeight = transitionMaxHeight;
+    // elem.style.transitionDuration = `${transitionSecs}s`;
+    // elem.style.minHeight = '0';
+    // elem.style.maxHeight = transitionMaxHeight;
+
+    // elem.style.transitionDuration = `20s`;
+    elem.style.transition = `min-height ${minTransSecs}s ${transTimingFunc}, max-height ${maxTransSecs}s ${transTimingFunc}`;
+    elem.style.minHeight = '0vh';
+    elem.style.maxHeight = '100vh';
 
     // console.log('elem.style.transitionDuration', elem.style.transitionDuration)
     // console.log('elem.style.minHeight', elem.style.minHeight)
