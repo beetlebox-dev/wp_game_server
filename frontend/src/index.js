@@ -87,6 +87,7 @@ class Game extends React.Component {
                     targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
                     status: 'start',
                 });
+                this.choose();
                 }, 1000)
 
                 // setTimeout(() => {
@@ -167,6 +168,8 @@ class Game extends React.Component {
             status: 'start',
             // prevSynsetsAddedCount: 0,
         })
+
+        this.choose();
 
 
         // this.choose();
@@ -308,8 +311,8 @@ class Game extends React.Component {
                 <ResetButton
                     text={buttonText}
                     handleClick={() => {
-                        this.resetGame();
-                        this.choose();
+                        // this.resetGame();
+                        // this.choose();
                         this.setState({status: 'play'});
                     }}
                 />
@@ -317,7 +320,10 @@ class Game extends React.Component {
             resetButtons[this.state.status] = 
                 <ResetButton
                     text={buttonText}
-                    handleClick={() => this.resetGame()}
+                    handleClick={() => {
+                        this.resetGame();
+                        // this.setState({status: 'start'});
+                    }}
                 />
         };
 
