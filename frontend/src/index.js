@@ -5,59 +5,47 @@ import './index.css';
 
 
 
-// Calculate next synsets on game load, so that the words displayed for the start synset doesn't change on "begin"!
+
+
+// cd /Users/john/Desktop/Apps/GoogleCLI/beetleboxdev/sources/wp-game-server/frontend
+// npm start
+// http://localhost:3000
+
+// For production:
+// npm run build
+
+
+
+// Test going to oldest synset visited when a choice is present. Map out synset map to see.
 
 
 
 
 
+
+
+
+
+// New games generate at 5:59am UTC (9:59pm Pacific previous day, 2:59pm Japan day of) (add 1 hour during daylight savings).
+
+// game_graph[node_index] = [correct_pointers_object, decoy_pointers_object, words_str_list, pos_str, gloss_str]
+// x_pointers_object = {node_index: pointer, ... }
+// pointer = [pointer_symbol, source_word, target_word]
+
+
+// Transition animation of next synset area.
 const minTransSecs = 1;  // The total seconds to transition min-height property from current to 0vh.
-const minMaxTransRatio = 4;
+const minMaxTransRatio = 4;  // maxTransSecs / minTransSecs
 const maxTransSecs = minTransSecs * minMaxTransRatio;  // The total seconds to transition max-height property from current to 1vh.
-// const transTimingFunc = 'ease-in';
-const transTimingFunc = 'cubic-bezier(0.6, 0, 1, 1)'
+const transTimingFunc = 'cubic-bezier(0.6, 0, 1, 1)';
 
-
-
-// New games generate at 6am UTC (10pm Pacific previous day, 3pm Japan day of)
-
-// function pad(number) {
-//     return String(number).padStart(2, '0');
-// };
-
-// const currentDate = new Date();
-// currentDate.setUTCHours(currentDate.getUTCHours() - 6);  // Subtract 6 hours from UTC time so that 6am registers to 12am.
-// const gameName = `${currentDate.getUTCFullYear()}-${pad(currentDate.getUTCMonth() + 1)}-${pad(currentDate.getUTCDate())}`;
-// console.log(gameName)
-
-
-console.log(process.env.PUBLIC_URL);
-console.log(process.env.REACT_APP_GAME_DATA_URL);
-
-
-const gameName = 'current_game';
-// const gameDataURL = `http://127.0.0.1:5000/${gameName}.json`;
-// const gameDataURL = `/${gameName}.json`;
 const gameDataURL = process.env.REACT_APP_GAME_DATA_URL;
-
-
-
-let gameGraph;
-let startSynsetId;
-let targetSynsetId;
-let totalStrikes;
-function loadGameData(data) {
-    gameGraph = data[0];
-    startSynsetId = data[1];
-    targetSynsetId = data[2];
-    totalStrikes = data[3];
-};
+let nodeOrder, gameGraph, startSynsetId, targetSynsetId, totalStrikes;
 
 
 class Game extends React.Component {
 
     constructor(props) {
-        // console.log('Start synset words', gameGraph[startSynsetId][2]);
         super(props);
 
         this.state = {
@@ -82,6 +70,7 @@ class Game extends React.Component {
 
                 setTimeout(() => {
                 loadGameData(data);
+                nodeOrder = Array(gameGraph.length).fill(0);
                 this.setState({
                     currentSynsetId: startSynsetId, 
                     targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
@@ -169,6 +158,8 @@ class Game extends React.Component {
             // prevSynsetsAddedCount: 0,
         })
 
+        nodeOrder = Array(gameGraph.length).fill(0);
+
         this.choose();
 
 
@@ -228,11 +219,16 @@ class Game extends React.Component {
                 };
 
                 pointerRoot = updatedCurrentSynsetId;
+                nodeOrder[pointerRoot] = prevState.stepCount + 1;
 
             } else {
                 // clickedAorB === null
                 pointerRoot = prevState.currentSynsetId;
+                nodeOrder[pointerRoot] = 1;
             };
+
+            console.log(nodeOrder)
+
 
 
             // Get nextSynsets.
@@ -866,7 +862,25 @@ function getUpdatedPointersObj(rootSynsetId) {
 
         if (allGroupPointerIndices.length > 0) {
 
-            const pointerIndex = Number(allGroupPointerIndices[0]);  // Getting first. Should instead be least recent.
+            let bestIndices = [];
+            let bestStepNum = Infinity;
+            for (const index of allGroupPointerIndices) {
+                const thisStepNum = nodeOrder[index];
+                console.log(thisStepNum)
+                if (thisStepNum < bestStepNum) {
+                    bestIndices = [index];
+                    bestStepNum = thisStepNum;
+                } else if (thisStepNum === bestStepNum) {
+                    bestIndices.push(index);
+                };
+            };
+            const pointerIndex = Number(randChoice(bestIndices));
+            console.log(allGroupPointerIndices)
+            console.log(bestIndices)
+            console.log(pointerIndex)
+
+            // const pointerIndex = Number(allGroupPointerIndices[0]);  // Getting first. Should instead be least recent.
+
             const pointerData = currentSynsetData[pointerGroup][pointerIndex];
             const pointerPhrase = pointerSymbolToPhrase(pointerData[0]);
             const pointerWords = pointerData.slice(1);
@@ -890,6 +904,13 @@ function getUpdatedPointersObj(rootSynsetId) {
     };
 
     return {result: 'cont', data: updatedNextSynsetsObj};
+};
+
+
+function randChoice(array) {
+    if (array.length === 0) return null;
+    const index = Math.floor(Math.random() * array.length);
+    return array[index];
 };
 
 
@@ -957,6 +978,14 @@ function wordsStrFromArray(wordsArrayInput, addEndingSpace=false, firstIndices=n
 };
 
 
+function loadGameData(data) {
+    gameGraph = data[0];
+    startSynsetId = data[1];
+    targetSynsetId = data[2];
+    totalStrikes = data[3];
+};
+
+
 function pointerSymbolToPhrase(pointerSymbol) {
     const pointerKey = {
         '^': 'which is related to',  // non-reflexive
@@ -997,6 +1026,7 @@ function pointerSymbolToPhrase(pointerSymbol) {
     };
     return pointerKey[pointerSymbol];
 };
+
 
 
 // ========================================

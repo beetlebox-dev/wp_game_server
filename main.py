@@ -7,14 +7,14 @@ from server_retrieval import Serve
 # Copyright 2021 Johnathan Pennington | All rights reserved.
 
 
-# Production environment.
 app = Flask(__name__, static_folder="frontend/build", static_url_path="/public")
-# React stores public files in the "build" folder, and requests public files from root url path "/".
+# React stores public files in the "build" folder.
+# Public files are requested at the root url path "/" by default. Default path can be overridden within .env files.
 
-# # TODO: For react dev environment only!
-from flask_cors import CORS
-CORS(app)
 
+# # TODO: Dev environment only!
+# from flask_cors import CORS
+# CORS(app)
 
 
 # @app.errorhandler(404)
@@ -83,7 +83,6 @@ CORS(app)
 @app.route('/')
 def home():
     return app.send_static_file('index.html')
-    # return render_template('volatile3gons.html')
 
 
 @app.route('/data')
