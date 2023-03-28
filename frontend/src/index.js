@@ -1,3 +1,4 @@
+import { click } from '@testing-library/user-event/dist/click';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -7,26 +8,22 @@ import './index.css';
 
 
 
-// cd /Users/john/Desktop/Apps/GoogleCLI/beetleboxdev/sources/wp-game-server/frontend
-// npm start
-// http://localhost:3000
-
-// For production:
-// npm run build
-
-
-
-// Test going to oldest synset visited when a choice is present. Map out synset map to see.
+// Are things rendering twice on initial load/mount?
 
 
 
 
 
-
-
+/*
+cd /Users/john/Desktop/Apps/GoogleCLI/beetleboxdev/sources/wp-game-server/frontend
+npm start
+http://localhost:3000
+For production: npm run build
+*/
 
 
 // New games generate at 5:59am UTC (9:59pm Pacific previous day, 2:59pm Japan day of) (add 1 hour during daylight savings).
+
 
 // game_graph[node_index] = [correct_pointers_object, decoy_pointers_object, words_str_list, pos_str, gloss_str]
 // x_pointers_object = {node_index: pointer, ... }
@@ -35,158 +32,72 @@ import './index.css';
 
 // Transition animation of next synset area.
 const minTransSecs = 1;  // The total seconds to transition min-height property from current to 0vh.
-const minMaxTransRatio = 4;  // maxTransSecs / minTransSecs
+const minMaxTransRatio = 4;  // maxTransSecs / minTransSecs  // Attempts to make shrink and grow timing to be the similar, assuming that average height of next synset text areas is 0.2vh.
 const maxTransSecs = minTransSecs * minMaxTransRatio;  // The total seconds to transition max-height property from current to 1vh.
 const transTimingFunc = 'cubic-bezier(0.6, 0, 1, 1)';
 
-const gameDataURL = process.env.REACT_APP_GAME_DATA_URL;
+
+const stripeAreaLength = 5;  // An integer. Each unit represents 1 stripe region with alternating colors on top/bottom.
+
+
+// Global variables.
 let nodeOrder, gameGraph, startSynsetId, targetSynsetId, totalStrikes;
 
+
+// Main React Component
 
 class Game extends React.Component {
 
     constructor(props) {
+
         super(props);
 
-        this.state = {
-            status: 'load',
-            mounted: false,
-            stepCount: 1,
-            strikeCount: 0,
-            prevSynsets: [],
-            currentSynsetConnectWord: -1,
-            nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
-            // targetPointerPhrase: '',
-            // prevSynsetsAddedCount: 0,
+        this.state = {status: 'load'};
 
-        };
-
-
-        console.log('fetching:', gameDataURL)
-        fetch(gameDataURL)
-            // .then((response) => console.log(response))
-            .then((response) => response.json())
-            .then((data) => {
-
-                setTimeout(() => {
-                loadGameData(data);
-                nodeOrder = Array(gameGraph.length).fill(0);
-                this.setState({
-                    currentSynsetId: startSynsetId, 
-                    targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
-                    status: 'start',
-                });
-                this.choose();
-                }, 1000)
-
-                // setTimeout(() => {
-                // if (this.state.mounted) this.choose();
-                // }, 4000)
-            });
+        fetch(process.env.REACT_APP_GAME_DATA_URL)
+        .then((response) => response.json())
+        .then((data) => {
+            gameGraph = data[0];
+            startSynsetId = data[1];
+            targetSynsetId = data[2];
+            totalStrikes = data[3];
+            this.resetGame();
+        });
     };
-
-    componentDidMount(prevProps) {
-        this.setState({mounted: true})
-        // if (this.state.status !== 'load') this.choose();
-
-        // setTimeout(() => { 
-        // q('a');
-        // q('b');
-        // }, 0)
-
-        // this.xformNewPrevSynsets(this.state.prevSynsetsAddedCount);
-
-    }
-
-    componentDidUpdate(prevProps) {
-    //     // Check if data changed in prevPorps first!
-
-    //     // w('a');
-    //     // w('b');
-    //     // setTimeout(() => { 
-    //     // // w('a');
-    //     // // w('b');
-    //     // q('a');
-    //     // q('b');
-    //     // // w(this.props.id)
-    //     // // q(this.props.id)
-    //     // }, 0)
-        // this.xformNewPrevSynsets(this.state.prevSynsetsAddedCount);
-    }
-
-
-
-    xformNewPrevSynsets(addCount) {
-
-        if (addCount < 1) return;
-    
-        for (let elemNum = 0; elemNum < addCount; elemNum++) {
-            const elem = document.querySelector(`xform-${elemNum}`);
-            elem.style.padding = '0'
-            elem.style.margin = '3vw'
-        }
-
-        // #prev-synsets {
-        // margin: 3vw 0;
-        // /* color: hsl(133, 0%, 60%); */
-        // color: hsla(0, 0%, 100%, 70%);
-        // }
-        // #prev-synsets .pointer {
-        // color: hsla(0, 0%, 100%, 50%);
-        // font-size: 0.8rem;
-
-
-
-        // this.setState({prevSynsetsAddedCount: 0})
-    }
-
-
 
     resetGame() {
 
-        this.setState({
-            stepCount: 1,
-            strikeCount: 0,
-            prevSynsets: [],
-            currentSynsetConnectWord: -1,
-            nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, synsetId], b: [ ... ] }
-            // targetPointerPhrase: '',
-            //
-            currentSynsetId: startSynsetId, 
-            targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2], true),
-            status: 'start',
-            // prevSynsetsAddedCount: 0,
-        })
-
         nodeOrder = Array(gameGraph.length).fill(0);
 
+        this.setState({
+            status: 'start',
+            strikeCount: 0,
+            stepCount: 1,
+            prevSynsets: [],
+            currentSynsetConnectWord: -1,
+            currentSynsetId: startSynsetId, 
+            nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, nodeIndex], b: [ ... ] }
+            targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2]),
+        });
+
         this.choose();
+    };
 
-
-        // this.choose();
-        // this.setState({status: 'play'})
-        // console.log('start game')
+    playGame() {
+        this.setState({status: 'play'});
     };
 
     choose(clickedAorB=null) {  // To init at game start, run choose(null).
 
-        console.log('################# choose')
-        // console.log('choose')
-
-        // console.log('mounted: ', this.state.mounted)
-        // console.log('status: ', this.state.status)
-
-
         this.setState((prevState) => {
 
-            if (prevState.status !== 'play' && prevState.status !== 'start') return {};
+            if (prevState.status !== 'play' && prevState.status !== 'start') return {};  // No state change.
 
             const stateChangeObj = {};
             const addToprevSynsets = [];
             let pointerRoot;
 
             if (clickedAorB !== null) {
-                // updatedNextSynsetsObj[aOrB] = {group: pointerGroup, id: pointerIndex, phrase: pointerPhrase, connectWords: pointerWords};
 
                 const nextSynsetData = prevState.nextSynsets[clickedAorB];
 
@@ -195,25 +106,22 @@ class Game extends React.Component {
                 stateChangeObj['currentSynsetId'] = updatedCurrentSynsetId;
                 stateChangeObj['stepCount'] = prevState.stepCount + 1;
                 stateChangeObj['currentSynsetConnectWord'] = nextSynsetData.connectWords[1];
-                const wordsFromCurrToPrev = getCurrentWordsToDisplay(prevState, clickedAorB);
+                const wordsFromCurrToPrev = pruneDisplayWords(prevState, clickedAorB);
                 const pointerPhraseFromCurrToPrev = prevState.nextSynsets[clickedAorB].phrase;
                 const prevSynsetObj = {words: wordsFromCurrToPrev, pointer: pointerPhraseFromCurrToPrev};
                 addToprevSynsets.push(prevSynsetObj);
 
                 if (nextSynsetData.group === 1) {
+
                     // Add strike.
                     const updatedStrikeCount = prevState.strikeCount + 1;
                     stateChangeObj['strikeCount'] = updatedStrikeCount;
+
                     if (updatedStrikeCount >= totalStrikes) {
                         stateChangeObj['status'] = 'lose';
-
                         const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
-                        // const pointerPhraseFromClickedToPrev = prevState.nextSynsets[clickedAorB].phrase;
                         const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: null};
                         stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets, [finalPrevSynsetObj]);
-
-                        console.log('* current words: ', gameGraph[updatedCurrentSynsetId][2])
-                        // stateChangeObj['prevSynsetsAddedCount'] = addToprevSynsets.length;
                         return stateChangeObj;  // Skip updating nextSynsets.
                     };
                 };
@@ -227,244 +135,355 @@ class Game extends React.Component {
                 nodeOrder[pointerRoot] = 1;
             };
 
-            console.log(nodeOrder)
-
-
-
-            // Get nextSynsets.
             const updatedPointersObj = getUpdatedPointersObj(pointerRoot);
 
-            // console.log('* current words: ', gameGraph[pointerRoot][2])
+            if (updatedPointersObj.result === 'cont') {
+                stateChangeObj['nextSynsets'] = updatedPointersObj.data;
 
-            if (['win', 'lose'].includes(updatedPointersObj.result)) {
+            } else {
+
                 stateChangeObj['status'] = updatedPointersObj.result;
+
                 if (updatedPointersObj.result === 'win') {
 
-                    // return {result: 'win', data: {phrase: pointerPhrase, connectWords: pointerWords}};
-                    // stateChangeObj['targetPointerPhrase'] = updatedPointersObj.data.phrase;
-
-                    const wordsFromClickedToPrev = getFinalWordsToDisplayWin(prevState, clickedAorB, updatedPointersObj.data.connectWords[0]);
-                    const pointerPhraseFromClickedToPrev = prevState.nextSynsets[clickedAorB].phrase;
-                    const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: pointerPhraseFromClickedToPrev};
+                    const finalPrevSynsetObj = {
+                        words: getFinalWordsToDisplayWin(prevState, clickedAorB, updatedPointersObj.data.connectWords[0]), 
+                        pointer: updatedPointersObj.data.phrase,
+                    };
                     addToprevSynsets.push(finalPrevSynsetObj);
 
                     const allTargetWords = gameGraph[targetSynsetId][2];
                     const displayTargetWordIndex = Math.max(updatedPointersObj.data.connectWords[1], 0);  // Change -1 (any word) to 0 (first word).
-                    // console.log('allTargetWords:', allTargetWords)
-                    // console.log('displayTargetWordIndex:', displayTargetWordIndex)
-                    // console.log('allTargetWords[displayTargetWordIndex]:', allTargetWords[displayTargetWordIndex])
-                    stateChangeObj['targetWords'] = allTargetWords[displayTargetWordIndex] + ' ';
-                    // wordsStrFromArray(gameGraph[targetSynsetId][2], true)
+                    stateChangeObj['targetWords'] = allTargetWords[displayTargetWordIndex];
                     
-                } else if (updatedPointersObj.result === 'lose') {
+                } else {  // updatedPointersObj.result === 'lose'
+
                     const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
-                    // const pointerPhraseFromClickedToPrev = prevState.nextSynsets[clickedAorB].phrase;
                     const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: null};
-                    console.log('finalPrevSynsetObj: ', finalPrevSynsetObj)
                     addToprevSynsets.push(finalPrevSynsetObj);
                 };
-
-            } else {
-                stateChangeObj['nextSynsets'] = updatedPointersObj.data;
-                // console.log('* a words: ', gameGraph[updatedPointersObj.data.a.id][2])
-                // console.log('* b words: ', gameGraph[updatedPointersObj.data.b.id][2])
             };
 
             stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets);
-            // stateChangeObj['prevSynsetsAddedCount'] = addToprevSynsets.length;
             return stateChangeObj;
         });
     };
 
     render() {
 
-        // console.log('target words: ', this.state.targetWords)
+        if (this.state.status === 'load') return;
 
-        if (this.state.status === 'load') {  // Indent all below.
-            return (<h1>Loading...</h1>)
-        };
-
-        // mounted / will unmount ???? !@#$
         if (['win', 'lose'].includes(this.state.status)) {
             document.body.classList.add(this.state.status);
         };
 
-        // const prevSynsetsArray = this.state.prevSynsetsIds.map(synsetIndex => gameGraph[synsetIndex][2]);
-        const prevSynsetsArray = this.state.prevSynsets;
+        return (<>
+            <StatusBar
+                status={this.state.status}
+                currentStrikeCount={this.state.strikeCount}
+                totalStrikeCount={totalStrikes}
+                currentStepCount={this.state.stepCount}
+            />
 
-        const currentWords = getCurrentWordsToDisplay(this.state) + ' ';
-        let currentPos = '';
-        let currentGloss = '';
+            <WinLoseHeading
+                status={this.state.status}
+                stepCount={this.state.stepCount}
+            />
 
-        // let startBox = null;
-        let statusBar = null;
-        let nextSynsetArea = null;
+            <PreviousSynsets
+                synsets={this.state.prevSynsets}
+            />
 
-        const resetButtons = {start: null, lose: null, win: null};
-        const buttonText = {start: 'BEGIN', lose: 'RESET', win: 'RESET'}[this.state.status];
-        if (this.state.status === 'start') {
-            resetButtons.start = 
-                <ResetButton
-                    text={buttonText}
-                    handleClick={() => {
-                        // this.resetGame();
-                        // this.choose();
-                        this.setState({status: 'play'});
-                    }}
+            <CurrentSynset
+                status={this.state.status}
+                words={pruneDisplayWords(this.state)}
+                id={this.state.currentSynsetId}
+            />
+
+            <ResetButton
+                displayStatus='start'
+                text='BEGIN'
+                status={this.state.status}
+                handleClick={this.playGame.bind(this)}
+            />
+
+            <ResetButton
+                displayStatus='lose'
+                text='RESET'
+                status={this.state.status}
+                handleClick={this.resetGame.bind(this)}
+            />
+
+            <NextSynsetArea
+                state={this.state}
+                choose={this.choose.bind(this)}
+            />
+
+            <Target
+                status={this.state.status}
+                targetWords={this.state.targetWords}
+            />
+
+            <ResetButton
+                displayStatus='win'
+                text='RESET'
+                status={this.state.status}
+                handleClick={this.resetGame.bind(this)}
+            />
+        </>)
+    };
+};
+
+
+// Secondary React Components
+
+function StatusBar(props) {
+    if (props.status !== 'load' && props.status !== 'start') {
+        return (
+            <div id="stats-bar">
+                <StrikeArea
+                    currentStrikeCount={props.currentStrikeCount}
+                    totalStrikeCount={props.totalStrikeCount}
                 />
-        } else {
-            resetButtons[this.state.status] = 
-                <ResetButton
-                    text={buttonText}
-                    handleClick={() => {
-                        this.resetGame();
-                        // this.setState({status: 'start'});
-                    }}
+                <ArrowArea
+                    currentStepCount={props.currentStepCount}
                 />
+            </div>
+        );
+    };
+    // Else, no html.
+};
+
+function StrikeArea(props) {
+
+    const strikeNums = Array.from(Array(props.totalStrikeCount).keys());  // strikeNums = [0, 1, ... , totalStrikeCount - 1]
+    return (
+        <div id="strike-area">
+            { strikeNums.map(strikeNum => renderStrikeBox(strikeNum)) }
+        </div>
+    );
+
+    function renderStrikeBox(strikeNum) {
+        let strikeBoxContent = null;
+        if (strikeNum < props.currentStrikeCount) {
+            strikeBoxContent = <img src={process.env.PUBLIC_URL + "/red_x.png"}/>;
         };
+        return (
+            <div key={strikeNum} className="strike-box">{strikeBoxContent}</div>
+        );
+    };
+};
 
-        if (this.state.status !== 'load' && this.state.status !== 'start') {
+function ArrowArea(props) {
 
-            statusBar =
-                <div id="stats-bar">
-                    <StrikeArea
-                        currentStrikeCount={this.state.strikeCount}
-                        totalStrikeCount={totalStrikes}
-                    />
-                    <ArrowArea
-                        currentStepCount={this.state.stepCount}
-                    />
-                </div>
+    const stepNums = Array.from(Array(props.currentStepCount).keys());  // stepNums = [0, 1, ... , currentStepCount - 1]
+    return (
+        <div id="arrow-area">
+            { stepNums.map(stepNum => renderArrowImg(stepNum)) }
+        </div>
+    );
 
-            const futureChoiceArea = [];
-            for (let i = 0; i < 4; i++) {
-                futureChoiceArea.push(<div className='a' key={i * 2}></div>, <div className='b' key={i * 2 + 1}></div>)
-            };
+    function renderArrowImg(stepNum) {
+        return (
+            <img key={stepNum} src={process.env.PUBLIC_URL + "/arrow_outline.png"}/>
+        )
+    };
+};
 
-            if (this.state.status !== 'win' && this.state.status !== 'lose') {
-                nextSynsetArea =
-                    <div id='next-synset-col'>
-                        <div id="next-synset-area">
-                            <div id="next-syn-a-gutter"></div>
-                            <div id="next-synsets">
-                                <NextSynset
-                                    id={'b'}
-                                    choose={() => this.choose('b')}
-                                    gameState={this.state}
-                                />
-                                <NextSynset
-                                    id={'a'}
-                                    choose={() => this.choose('a')}
-                                    gameState={this.state}
-                                />
-                            </div>
-                            <div id="next-syn-b-gutter"></div>
-                        </div>
-                        <div id='future-choice-area'>{futureChoiceArea}</div>
-                    </div>
-            };
-        } else {
-            currentPos = gameGraph[this.state.currentSynsetId][3];
-            currentGloss = gameGraph[this.state.currentSynsetId][4];    
+function WinLoseHeading(props) {
+    if (props.status === 'lose') {
+        return (
+            <h1 id='lose-heading'>LOSE</h1>
+        );
+    } else if (props.status === 'win') {
+        const winStats = `in ${props.stepCount} steps`;
+        return (
+            <h1 id='win-heading'
+                >WIN
+                <span id='win-stats'>{winStats}</span>
+            </h1>
+        );
+    };
+    // Else, no html.
+};
+
+function PreviousSynsets(props) {
+
+    return (
+        <div id="prev-synsets">
+            { props.synsets.map((synsetInfo, index) => renderPrevSynset(synsetInfo, index)) }
+        </div>
+    );
+
+    function renderPrevSynset(synsetInfo, index) {
+        return (
+            <div key={index}>
+                <span className="words">{synsetInfo.words}</span>
+                <br/>
+                <span className="pointer">{synsetInfo.pointer}</span>
+            </div>
+        );
+    };
+};
+
+function CurrentSynset(props) {
+
+    if (props.status === 'play' || props.status === 'start') {
+
+        let heading = null;
+        let pos = '';
+        let gloss = '';
+        if (props.status === 'start') {
+            heading = <><span className="endpoint-heading">START</span><br/></>;
+            pos = gameGraph[props.id][3];
+            gloss = gameGraph[props.id][4];    
         };
-
-        // const futureChoiceArea = [];
-        // for (let i = 0; i < 6; i++) {
-        //     futureChoiceArea.push(<div className='a' key={i * 2}></div>, <div className='b' key={i * 2 + 1}></div>)
-        // };
 
         return (
-            <>
-                {statusBar}
-                {/* <div id="stats-bar">
-                    <StrikeArea
-                        currentStrikeCount={this.state.strikeCount}
-                        totalStrikeCount={totalStrikes}
-                    />
-                    <ArrowArea
-                        currentStepCount={this.state.stepCount}
-                    />
-                </div> */}
+            <div id="curr-synset">
+                {heading}
+                <span className="words">{props.words} </span><span className="pos">{pos}</span>
+                <br/>
+                <span className="gloss">{gloss}</span>
+            </div>
+        );
+    };
+};
 
-                <WinLoseHeading
-                    status={this.state.status}
-                    stepCount={this.state.stepCount}
-                />
+function NextSynsetArea(props) {
 
-                <PreviousSynsets
-                    synsets={prevSynsetsArray}
-                    // newCount={prevSynsetsAddedCount}
-                />
+    if (props.state.status === 'play') {
 
-                <CurrentSynset
-                    status={this.state.status}
-                    words={currentWords}
-                    pos={currentPos}
-                    gloss={currentGloss}
-                />
+        const stripeNums = Array.from(Array(stripeAreaLength).keys());  // stripeNums = [0, 1, ... , stripeAreaLength - 1]
 
-                {resetButtons.start}
-                {resetButtons.lose}
+        return (
+            <div id='next-synset-col'>
+                <div id="next-synset-area">
+                    <div id="next-syn-a-gutter"></div>
+                    <div id="next-synsets">
+                        <NextSynset
+                            id={'b'}
+                            choose={props.choose}
+                            gameState={props.state}
+                        />
+                        <NextSynset
+                            id={'a'}
+                            choose={props.choose}
+                            gameState={props.state}
+                        />
+                    </div>
+                    <div id="next-syn-b-gutter"></div>
+                </div>
+                <div id='future-choice-area'>
+                    { stripeNums.map(stripeNum => renderSingleStripe(stripeNum)) }
+                </div>
+            </div>
+        );
+    };
+    // Else, no html.
 
-                {nextSynsetArea}
-                {/* <div id='future-choice-area'>{futureChoiceArea}</div> */}
+    function renderSingleStripe(stripeNum) {
+        let letter = 'b';
+        if (stripeNum % 2 === 0) letter = 'a';  // Even stripe numbers are 'a'; odds are 'b'.
+        return <div className={letter} key={stripeNum}></div>;
+    };
+};
 
-                <Target
-                    status={this.state.status}
-                    // targetPointerPhrase={this.state.targetPointerPhrase}
-                    targetWords={this.state.targetWords}
-                />
+class NextSynset extends React.Component {
 
+    constructor(props) {
+        super(props);
+        this.state = {mounted: false};
+    };
 
+    componentDidMount() {
+        this.setState({mounted: true});
+    };
 
-                {resetButtons.win}
-            </>
-        )
-    }
+    componentDidUpdate(prevProps) {
+        nextSynUnrestrictHeightAfterRender(this.props.id);
+    };
+
+    render() {
+
+        if (this.props.gameState.status !== 'play' || this.props.gameState.nextSynsets.a === null) return;
+
+        if (this.state.mounted) nextSynRestrictHeightBeforeRender(this.props.id);
+
+        const pointerData = this.props.gameState.nextSynsets[this.props.id];
+        const synsetData = gameGraph[pointerData.id];
+        const wordsStr = wordsStrFromArray(synsetData[2], [pointerData.connectWords[1]]);
+
+        return (
+            <div id={`next-syn-${this.props.id}-text`} onClick={() => this.props.choose(this.props.id)}>
+                <span className="pointer">{pointerData.phrase}</span>
+                <span>
+                    <span className="words">{wordsStr} </span>
+                    <span className="pos">{synsetData[3]}</span>
+                </span>
+                <span className="gloss">{synsetData[4]}</span>
+            </div>
+        );
+    };
+};
+
+function Target(props) {
+
+    let targetMargin = null;
+    if (props.status === 'play' || props.status === 'lose') {
+        targetMargin = <div id="target-margin"></div>
+    };
+
+    let targetHeading = null;
+    if (props.status !== 'win') {
+        targetHeading = <><span className="endpoint-heading">TARGET</span><br/></>;
+    };
+
+    return (
+        <>
+            {targetMargin}
+            <div id="target">
+                {targetHeading}
+                <span className="words">{props.targetWords} </span>
+                <span className="pos">{gameGraph[targetSynsetId][3]}</span>
+                <br/>
+                <span className="gloss">{gameGraph[targetSynsetId][4]}</span>
+            </div>
+        </>
+    );
+};
+
+function ResetButton(props) {
+    if (props.displayStatus === props.status) {
+        return <button className='reset-button' onClick={props.handleClick}>{props.text}</button>;
+    };
+    // Else, no html.
 };
 
 
-function getCurrentWordsToDisplay(state, connectingPointers='both') {
-    // ConnectingPointers can be 'a', 'b', or 'both' (default).
+// Animation and Appearance
 
-    const allCurrentWordsArray = gameGraph[state.currentSynsetId][2];
-
-    let connectingPointersArray;
-    if (connectingPointers === 'both') connectingPointersArray = ['a', 'b'];
-    else connectingPointersArray = [connectingPointers];  // ConnectingPointers is either 'a' or 'b'.
-
-    // Get indices for the words to display.
-    const displayWordIndices = [state.currentSynsetConnectWord];
-    for (const aOrB of connectingPointersArray) {
-        if (state.nextSynsets[aOrB] !== null) {
-            displayWordIndices.push(state.nextSynsets[aOrB].connectWords[0]);
-        };
-    };
-    // const displayWordIndicesPruned = pruneArray(displayWordIndices, true);
-
-    const displayWordIndicesPruned = pruneArray(displayWordIndices);
-    if (displayWordIndicesPruned.length === 0) {
-        if (connectingPointers === 'both') {
-            // No specific target words on either side, so use first for display.
-            displayWordIndicesPruned.push(0);
-        } else {
-            // ConnectingPointers is either 'a' or 'b'.
-            const bOrA = {a: 'b', b: 'a'}[connectingPointers];  // Switch a and b.
-            if (state.nextSynsets[bOrA] !== null) {
-                const connectWordIndex = state.nextSynsets[bOrA].connectWords[0];
-                displayWordIndicesPruned.push(Math.max(connectWordIndex, 0));  // Turns -1 to 0.
-            };
-        };
-    };
-
-    const prunedCurrentWordsArray = displayWordIndicesPruned.map(index => allCurrentWordsArray[index]);
-    const prunedCurrentWords = wordsStrFromArray(prunedCurrentWordsArray);
-    // console.log(state.currentSynsetConnectWord)
-    // console.log(displayWordIndices)
-    // console.log(prunedCurrentWords)
-    return prunedCurrentWords;
+function nextSynRestrictHeightBeforeRender(aOrB) {
+    const elemId = `next-syn-${aOrB}-text`;
+    const elem = document.getElementById(elemId);
+    const elemLiveStyles = window.getComputedStyle(elem);
+    elem.style.minHeight = elem.style.maxHeight = elemLiveStyles.getPropertyValue('height');  // Set max/min heights to current height.
+    elem.style.transition = 'all 0s';  // Transition to restricted max/min height value instantly.
 };
 
+function nextSynUnrestrictHeightAfterRender(aOrB) {
+    setTimeout(() => {  // Need setTimeout here to prevent subsequent calls from abruptly ending transitions from previous calls.
+        const elemId = `next-syn-${aOrB}-text`;
+        const elem = document.getElementById(elemId);
+        elem.style.transition = `min-height ${minTransSecs}s ${transTimingFunc}, max-height ${maxTransSecs}s ${transTimingFunc}`;  // Set transition properties.
+        // Gradually loosen height restrictions of element to values below.
+        elem.style.minHeight = '0vh';
+        elem.style.maxHeight = '100vh';
+    }, 0);
+};
+
+
+// Game Data Manipulation
 
 function getFinalWordsToDisplayLose(state, clickedAorB) {
     const clickedSynsetData = state.nextSynsets[clickedAorB];
@@ -472,7 +491,6 @@ function getFinalWordsToDisplayLose(state, clickedAorB) {
     const displayWordIndex = Math.max(clickedSynsetData.connectWords[1], 0);  // Turns -1 (no specific pointer word) to 0 (first pointer word index).
     return allWordsArray[displayWordIndex];
 };
-
 
 function getFinalWordsToDisplayWin(state, clickedAorB, targetConnectWordIndex) {
     const clickedSynsetData = state.nextSynsets[clickedAorB];
@@ -482,444 +500,70 @@ function getFinalWordsToDisplayWin(state, clickedAorB, targetConnectWordIndex) {
     return wordsStrFromArray(wordsArray);
 };
 
+function pruneDisplayWords(state, connectingPointers='both') {
+    // ConnectingPointers can be 'a', 'b', or 'both' (default).
 
-function ResetButton(props) {
-    // if (props.status === 'start') {
-    //     return (
-    //         <button onClick={props.startGame}>BEGIN</button>
-    //     )
-    // };
-    return (
-        <button className='reset-button' onClick={props.handleClick}>{props.text}</button>
-    )
-};
+    const allWordsArray = gameGraph[state.currentSynsetId][2];
 
+    let connectingPointersArray;
+    if (connectingPointers === 'both') connectingPointersArray = ['a', 'b'];
+    else connectingPointersArray = [connectingPointers];  // ConnectingPointers is a string, either 'a' or 'b'.
 
-function StrikeArea(props) {
+    // Get indices for the words to display.
+    const displayWordIndices = [state.currentSynsetConnectWord];
+    for (const aOrB of connectingPointersArray) {
+        if (state.nextSynsets[aOrB] !== null) {
+            displayWordIndices.push(state.nextSynsets[aOrB].connectWords[0]);
+        };
+    };
 
-    function renderStrikeBox(strikeNum) {
-        if (strikeNum < props.currentStrikeCount) {
-            return (
-                <div key={strikeNum} className="strike-box">
-                    <img src={process.env.PUBLIC_URL + "/red_x.png"}/>
-                </div>
-            )
+    const displayWordIndicesPruned = pruneArray(displayWordIndices);
+    if (displayWordIndicesPruned.length === 0) {
+        const bOrA = {a: 'b', b: 'a'}[connectingPointers];  // Switch a and b.
+        if (connectingPointers === 'both' || state.nextSynsets[bOrA] === null) {
+            // No specific target words before or after, so use first word for display.
+            displayWordIndicesPruned.push(0);
         } else {
-            return (
-                <div key={strikeNum} className="strike-box"></div>
-            )
+            // ConnectingPointers is either 'a' or 'b'.
+            const connectWordIndex = state.nextSynsets[bOrA].connectWords[0];
+            displayWordIndicesPruned.push(Math.max(connectWordIndex, 0));  // Turns -1 to 0.
         };
     };
 
-    const strikeNums = Array.from(Array(props.totalStrikeCount).keys());  // [0, 1, ... , totalStrikeCount - 1]
-
-    return (
-        <div id="strike-area">
-            { strikeNums.map(strikeNum => renderStrikeBox(strikeNum)) }
-        </div>
-    )
+    const prunedWordsArray = displayWordIndicesPruned.map(index => allWordsArray[index]);
+    const prunedWords = wordsStrFromArray(prunedWordsArray);
+    return prunedWords;
 };
 
+function wordsStrFromArray(wordsArrayInput, firstIndex=null) {
+    // All words to be placed in returned string are in wordsArrayInput.
+    // FirstIndex refers to the word that should be placed first in the final string.
 
-function ArrowArea(props) {
-
-    const steps = Array.from(Array(props.currentStepCount).keys());
-    // [0, 1, ... , currentStepCount - 1]
-
-    return (
-        <div id="arrow-area">
-            { steps.map(stepNum => { return (
-                <img key={stepNum} src={process.env.PUBLIC_URL + "/arrow_outline.png"}/>
-            )})}
-        </div>
-    )
-};
-
-
-function WinLoseHeading(props) {
-    if (props.status === 'lose') {
-        return (
-            <h1 id='lose-heading'>LOSE</h1>
-        )
-    } else if (props.status === 'win') {
-        const winStats = `in ${props.stepCount} steps`;
-        return (
-            <h1 id='win-heading'
-                >WIN
-                <span id='win-stats'>{winStats}</span>
-            </h1>
-        )
-    };
-};
-
-
-function PreviousSynsets(props) {
-    return (
-        <div id="prev-synsets">
-            { props.synsets.map((synsetInfo, index) => {
-                // let className = null;
-                // if (index >= props.synsets.length - props.newCount) {
-                //     className = `xform xform-${index - props.synsets.length + props.newCount}`;
-                // }
-                return (
-                    // <div key={index} className="words">{wordsStrFromArray(words)}</div>
-                    <div key={index}>
-                    {/* <div key={index} className={className}> */}
-                        <span className="words">{synsetInfo.words}</span>
-                        <br/>
-                        <span className="pointer">{synsetInfo.pointer}</span>
-                    </div>
-                )
-            })}
-        </div>
-    )
-};
-
-
-//!@#$!@#$!@#$ working here.
-function CurrentSynset(props) {
-    // let heading = null;
-    // if (props.status !== 'load') {
-    //     heading = <span id="curr-heading">START</span>;
-    // };
-    if (props.status === 'play' || props.status === 'start') {
-
-        let heading = null;
-        if (props.status === 'start') {
-            heading = <><span className="endpoint-heading">START</span><br/></>;
-        };
-
-        return (
-            <div id="curr-synset">
-                {heading}
-                <span className="words">{props.words}</span><span className="pos">{props.pos}</span>
-                <br/>
-                <span className="gloss">{props.gloss}</span>
-            </div>
-        )
-    // } else {
-
-    };
-};
-
-
-class NextSynset extends React.Component {
-
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            mounted: false,
-        }
-    }
-
-    componentDidMount() {
-        this.setState({mounted: true})
-
-        console.log('componentDidMount', this.props.id)
-        // nextSynUnrestrictHeightAfterRender(this.props.id)
-        setTimeout(() => { 
-        nextSynUnrestrictHeightAfterRender(this.props.id)
-        }, 0)
-    }
-
-    componentDidUpdate(prevProps) {
-        console.log('componentDidUpdate', this.props.id)
-        // // Check if data changed in prevPorps first!
-        // nextSynUnrestrictHeightAfterRender(this.props.id)
-        setTimeout(() => { 
-        nextSynUnrestrictHeightAfterRender(this.props.id)
-        }, 0)
-    }
-
-    // getting multiple times! const elemId = `next-syn-${this.props.id}-text`;
-
-    render() {
-
-
-        if (this.props.gameState.status !== 'play') return;
-
-        console.log('before render', this.props.id)
-
-        if (this.state.mounted) {
-            nextSynRestrictHeightBeforeRender(this.props.id)
-        }
-
-        const elemId = `next-syn-${this.props.id}-text`;
-
-        if (this.props.gameState.nextSynsets.a === null) {
-            // Return empty html structure. Data not initialized.
-            return (
-                <div
-                    id={elemId}
-                    // onClick={this.props.choose(this.props.id)}
-                >
-                    <span className="pointer">pointer</span>
-                    {/* <br/> */}
-                    <span><span className="words">words </span><span className="pos">pos</span></span>
-                    {/* <br/> */}
-                    <span className="gloss">gloss</span>
-                </div>
-            )
-
-        } else {
-            // updatedNextSynsetsObj[aOrB] = {group: pointerGroup, id: pointerIndex, phrase: pointerPhrase, connectWords: pointerWords};
-            const pointerData = this.props.gameState.nextSynsets[this.props.id];
-            const synsetData = gameGraph[pointerData.id];
-            const pointerPhrase = pointerData.phrase;
-            let wordsStr = wordsStrFromArray(synsetData[2], true, [pointerData.connectWords[1]]);
-            // wordsStr += [' (correct) ', ' (decoy) '][pointerData.group];  // let wordsStr debug !@#$!@#$
-            return (
-                <div
-                    id={elemId}
-                    // onClick={this.props.choose(this.props.id)}
-                    onClick={this.props.choose}
-                >
-                    {/* <span className="pointer">{pointerSymbolToPhrase(pointerSymbol)}</span> */}
-                    <span className="pointer">{pointerPhrase}</span>
-                    {/* <br/> */}
-                    <span><span className="words">{wordsStr}</span><span className="pos">{synsetData[3]}</span></span>
-                    {/* <br/> */}
-                    <span className="gloss">{synsetData[4]}</span>
-                </div>
-            )
-        };
-    }
-};
-
-
-// function transitionNextSynsetsHeights(id) {
-//     const elemId = `next-syn-${id}-text`;
-//     const elem = document.getElementById(elemId);
-//     // let elemHeight = elem.style.height;
-//     const heightDiff = elem.scrollHeight - elem.clientHeight;
-//     console.log('###########', id)
-//     console.log('elem.scrollHeight', elem.scrollHeight)
-//     console.log('elem.clientHeight', elem.clientHeight)
-//     console.log('heightDiff', heightDiff)
-//     // elem.style.height += heightDiff;
-// };
-
-document.addEventListener('keydown', event => {
-    // if (event.key === 'q') { q('a'); q('b'); }
-    // else if (event.key === 'w') { w('a'); w('b'); };
-    // // transitionNextSynsetsHeights('a')
-    // // transitionNextSynsetsHeights('b')
-    nextSynUnrestrictHeightAfterRender('b')
-    nextSynUnrestrictHeightAfterRender('a')
-
-});
-function nextSynRestrictHeightBeforeRender(id) {
-
-    console.log('restrict', id)
-
-    // if (id === 'b') return
-
-    const elemId = `next-syn-${id}-text`;
-    const elem = document.getElementById(elemId);
-    // console.log(elemId)
-    // console.log(elem)
-    const elemLiveStyles = window.getComputedStyle(elem);
-
-    // console.log('********************')
-
-    // Restrict min/max height to current height instantly.
-    // const currentHeightB = elem.offsetHeight;
-    const currentHeightB = elemLiveStyles.getPropertyValue('height').slice(0, -2);
-    elem.style.minHeight = elem.style.maxHeight = `${currentHeightB}px`;
-    // elem.style.minHeight = elem.style.maxHeight = `40px`;
-    // elem.style.transitionDuration = '0s';
-    elem.style.transition = 'all 0s';
-
-
-    // console.log('currentHeightB', currentHeightB)
-    // console.log('elem.style.minHeight', elem.style.minHeight)
-    // console.log('elem.style.maxHeight', elem.style.maxHeight)
-    // console.log('elem.style.transitionDuration', elem.style.transitionDuration)
-}
-function nextSynUnrestrictHeightAfterRender(id) {
-
-    // if (id === 'b') return
-
-    console.log('unrestrict', id)
-
-
-    const elemId = `next-syn-${id}-text`;
-    const elem = document.getElementById(elemId);
-    // console.log(elemId)
-    // console.log(elem)
-    // const elemLiveStyles = window.getComputedStyle(elem);
-
-    // console.log('********************')
-
-    // Unrestrict min/max height gradually over transition time.
-    // elem.style.transitionDuration = `${transitionSecs}s`;
-    // elem.style.minHeight = '0';
-    // elem.style.maxHeight = transitionMaxHeight;
-
-    // elem.style.transitionDuration = `20s`;
-    elem.style.transition = `min-height ${minTransSecs}s ${transTimingFunc}, max-height ${maxTransSecs}s ${transTimingFunc}`;
-    elem.style.minHeight = '0vh';
-    elem.style.maxHeight = '100vh';
-
-    // console.log('elem.style.transitionDuration', elem.style.transitionDuration)
-    // console.log('elem.style.minHeight', elem.style.minHeight)
-    // console.log('elem.style.maxHeight', elem.style.maxHeight)
-    // // const currentHeightB = elem.offsetHeight;
-    // const currentHeightB = elemLiveStyles.getPropertyValue('height').slice(0, -2);
-    // console.log('currentHeightB', currentHeightB)
-}
-
-// // let textHeightTransTimeoutId = null;  // GLOBAL
-// function textHeightTrans(elemId) {
-
-//     console.log('********************')
-//     console.log(elemId)
-
-
-//     const transitionSecs = 4;
-
-//     // clearTimeout(textHeightTransTimeoutId);
-
-
-//     const textBoxB = document.getElementById(elemId);
-
-//     // Restrict min/max height to current height instantly.
-//     const currentHeightB = textBoxB.offsetHeight;
-//     textBoxB.style.minHeight = textBoxB.style.maxHeight = `${currentHeightB}px`;
-//     textBoxB.style.transitionDuration = '0s';
-
-//     console.log('textBoxB.style.transitionDuration', textBoxB.style.transitionDuration)
-//     console.log('currentHeightB', currentHeightB)
-//     console.log('textBoxB.style.minHeight', textBoxB.style.minHeight)
-//     console.log('textBoxB.style.maxHeight', textBoxB.style.maxHeight)
-
-
-//     // Unrestrict min/max height gradually over transition time.
-//     textBoxB.style.transitionDuration = `${transitionSecs}s`;
-//     textBoxB.style.minHeight = '0';
-//     textBoxB.style.maxHeight = '100vw';
-
-//     console.log('textBoxB.style.transitionDuration', textBoxB.style.transitionDuration)
-//     console.log('currentHeightB', currentHeightB)
-//     console.log('textBoxB.style.minHeight', textBoxB.style.minHeight)
-//     console.log('textBoxB.style.maxHeight', textBoxB.style.maxHeight)
-
-//     // textHeightTransTimeoutId = setTimeout(function () {
-//     //     textBoxB.style.transitionDuration = '0';
-//     //     const currentHeightB = textBoxB.offsetHeight;
-//     //     textBoxB.style.minHeight = textBoxB.style.maxHeight = `${currentHeightB}px`;
-//     // }, transitionSecs * 1000);
-// }
-
-
-function Target(props) {
-
-    let targetMargin = null;
-    let targetHeading = null;
-    // let targetPointerPhrase = <span className="pointer">{props.targetPointerPhrase}</span>
-    if (props.status !== 'win') {
-        // targetMargin = <div id="target-margin"></div>
-        targetHeading = <><span className="endpoint-heading">TARGET</span><br/></>;
-        // targetPointerPhrase = null;
+    let wordsArray;
+    if (firstIndex !== null) {
+        // Create wordsArray from wordsArrayInput, putting firstIndex word first.
+        const wordsArrayInputSlice = wordsArrayInput.slice();
+        const removedWordInArray = wordsArrayInputSlice.splice(firstIndex, 1);  // Remove word from wordsArrayInputSlice.
+        wordsArray = [removedWordInArray[0]];
+        wordsArrayInputSlice.forEach(word => wordsArray.push(word));
+    } else {
+        wordsArray = wordsArrayInput;
     };
 
-    // if (props.status === 'start') targetMargin = <div id="target-margin"></div>
-    if (props.status === 'play' || props.status === 'lose') targetMargin = <div id="target-margin" className="draw-top-line"></div>
-    
-    return (
-        <>
-            {targetMargin}
-            <div id="target">
-                {targetHeading}
-                {/* {targetPointerPhrase} */}
-                <span className="words">{props.targetWords}</span><span className="pos">{gameGraph[targetSynsetId][3]}</span>&nbsp;&nbsp;
-                <br/>
-                <span className="gloss">{gameGraph[targetSynsetId][4]}</span>
-            </div>
-        </>
-    )
-};
-
-
-function getUpdatedPointersObj(rootSynsetId) {
-    // Returns object = {result: cont/win/lose, data: data}
-    // If result is 'cont', data is updatedNextSynsetsObj.
-    // If result is 'win', data is finalPointer.
-    // If result is 'lose', no data is returned.
-
-    const currentSynsetData = gameGraph[rootSynsetId];
-
-    let pointerLetterNames = ['a', 'b'];
-    if (Math.random() < 0.5) pointerLetterNames = ['b', 'a'];  // !@#$ debug
-
-    const updatedNextSynsetsObj = {a: null, b: null};
-    
-    let pointerGroup = 0;  // Correct is at 0, decoy is at 1.
-    for (const aOrB of pointerLetterNames) {
-    
-        const allGroupPointerIndices = Object.keys(currentSynsetData[pointerGroup]).slice();  // slice debug !@#$
-
-        if (allGroupPointerIndices.length > 0) {
-
-            let bestIndices = [];
-            let bestStepNum = Infinity;
-            for (const index of allGroupPointerIndices) {
-                const thisStepNum = nodeOrder[index];
-                console.log(thisStepNum)
-                if (thisStepNum < bestStepNum) {
-                    bestIndices = [index];
-                    bestStepNum = thisStepNum;
-                } else if (thisStepNum === bestStepNum) {
-                    bestIndices.push(index);
-                };
-            };
-            const pointerIndex = Number(randChoice(bestIndices));
-            console.log(allGroupPointerIndices)
-            console.log(bestIndices)
-            console.log(pointerIndex)
-
-            // const pointerIndex = Number(allGroupPointerIndices[0]);  // Getting first. Should instead be least recent.
-
-            const pointerData = currentSynsetData[pointerGroup][pointerIndex];
-            const pointerPhrase = pointerSymbolToPhrase(pointerData[0]);
-            const pointerWords = pointerData.slice(1);
-
-            if (allGroupPointerIndices.includes(String(targetSynsetId))) {
-                // win(pointerPhrase);
-                return {result: 'win', data: {phrase: pointerPhrase, connectWords: pointerWords}};
-            };
-
-            // updatedNextSynsetsObj[aOrB] = [pointerDataIndex, pointerIndex];
-            updatedNextSynsetsObj[aOrB] = {group: pointerGroup, id: pointerIndex, phrase: pointerPhrase, connectWords: pointerWords};
-
-        } else {
-            // Should not happen. Synsets should always have at least 1 correct and decoy pointer unless target or strike limit is reached.
-            console.log('should not happen?????? No')
-            // lose();
-            return {result: 'lose'};
-        };
-
-        pointerGroup = 1;
+    let synsetWordString = '';
+    for (let wordNum = 0; wordNum < wordsArray.length; wordNum++) {
+        if (wordNum > 0) synsetWordString += ', ';
+        synsetWordString += wordsArray[wordNum];
     };
-
-    return {result: 'cont', data: updatedNextSynsetsObj};
+    return synsetWordString;
 };
 
-
-function randChoice(array) {
-    if (array.length === 0) return null;
-    const index = Math.floor(Math.random() * array.length);
-    return array[index];
-};
-
-
-function pruneArray(array, disallowEmptyList=false) {
-    // Remove duplicates (retaining first appearance of a duplicated value) and -1.
-    // If disallowEmptyList is true, returns [0].
+function pruneArray(inputArray, disallowEmptyList=false) {
+    // Removes -1 and duplicate values from inputArray (retaining only the first appearance of a duplicated value).
+    // If disallowEmptyList is true, an empty inputArray results in [0] being returned.
     const prevElements = new Set();
     const prunedArray = [];
-    for (const elem of array) {
+    for (const elem of inputArray) {
         if (elem !== -1 && prevElements.has(elem) === false) {
             prevElements.add(elem);
             prunedArray.push(elem);
@@ -929,62 +573,63 @@ function pruneArray(array, disallowEmptyList=false) {
     return prunedArray;
 };
 
+function getUpdatedPointersObj(rootSynsetId) {
+    // Return object = {result: cont/win/lose, data: data}
+    // If result is 'lose', data is undefined.
+    // If result is 'win', data = {phrase: finalPointerPhrase, connectWords: finalPointerConnectWords}.
+    // If result is 'cont', data is updatedPointersObj.
+        // updatedPointersObj[aOrB] = {group: pointerGroup, id: pointerIndex, phrase: pointerPhrase, connectWords: pointerWords}
 
-function wordsStrFromArray(wordsArrayInput, addEndingSpace=false, firstIndices=null) {
+    const currentSynsetData = gameGraph[rootSynsetId];
 
-    // todo handle firstIndices -1, duplicate indices!
+    // Swap pointer ordering randomly.
+    let pointerLetterNames = ['a', 'b'];
+    if (Math.random() < 0.5) pointerLetterNames = ['b', 'a'];
 
-    // Reorder wordsArrayInput, putting firstIndices first.
-    let wordsArray;
-    if (firstIndices !== null) {
+    const updatedPointersObj = {a: null, b: null};
+    
+    let pointerGroup = 0;  // Correct is at 0; decoy is at 1.
+    for (const aOrB of pointerLetterNames) {
+    
+        const allGroupPointerIndices = Object.keys(currentSynsetData[pointerGroup]);
 
-        // Remove duplicates and -1.
-        const firstIndicesPruned = pruneArray(firstIndices);
-        // const firstIndicesSet = new Set();
-        // const firstIndicesPruned = [];
-        // for (const index of firstIndices) {
-        //     if (index !== -1 && firstIndicesSet.has(index) === false) {
-        //         firstIndicesSet.add(index);
-        //         firstIndicesPruned.push(index);
-        //     };
-        // };
+        if (allGroupPointerIndices.length > 0) {
 
+            // Choose leastRecentIndices from allGroupPointerIndices.
+            let leastRecentIndices = [];
+            let leastRecentStepNum = Infinity;
+            for (const thisIndex of allGroupPointerIndices) {
+                const thisStepNum = nodeOrder[thisIndex];
+                if (thisStepNum < leastRecentStepNum) {
+                    leastRecentIndices = [thisIndex];
+                    leastRecentStepNum = thisStepNum;
+                } else if (thisStepNum === leastRecentStepNum) {
+                    leastRecentIndices.push(thisIndex);
+                };
+            };
 
-        // todo handle index < 0 or index out of range.
+            const pointerIndex = Number(randChoice(leastRecentIndices));  // Select random pointerIndex from leastRecentIndices.
+            const pointerData = currentSynsetData[pointerGroup][pointerIndex];
+            const pointerPhrase = pointerSymbolToPhrase(pointerData[0]);
+            const pointerWords = pointerData.slice(1);
 
+            if (allGroupPointerIndices.includes(String(targetSynsetId))) {
+                return {result: 'win', data: {phrase: pointerPhrase, connectWords: pointerWords}};
+            };
 
-        // Extract elements that go first from wordsArrayInputSlice, and place in wordsArray in order.
-        wordsArray = [];
-        const wordsArrayInputSlice = wordsArrayInput.slice();
-        for (const index of firstIndicesPruned) {
-            const removedWordInArray = wordsArrayInputSlice.splice(index, 1);
-            wordsArray.push(removedWordInArray[0]);
+            updatedPointersObj[aOrB] = {group: pointerGroup, id: pointerIndex, phrase: pointerPhrase, connectWords: pointerWords};
+
+        } else {
+            // allGroupPointerIndices.length <= 0
+            // Should not happen. Synsets should always have at least 1 correct and decoy pointer unless target or strike limit is reached.
+            return {result: 'lose'};
         };
 
-        // Add non-prioritized words from wordsArrayInputSlice after prioiritzed words in wordsArray.
-        wordsArrayInputSlice.forEach(word => wordsArray.push(word));
-    } else {
-        wordsArray = wordsArrayInput;
+        pointerGroup = 1;  // Was 0.
     };
 
-
-    let synsetWordString = '';
-    for (let wordNum = 0; wordNum < wordsArray.length; wordNum++) {
-        if (wordNum > 0) synsetWordString += ', ';
-        synsetWordString += wordsArray[wordNum];
-    };
-    if (addEndingSpace) synsetWordString += ' ';
-    return synsetWordString;
+    return {result: 'cont', data: updatedPointersObj};
 };
-
-
-function loadGameData(data) {
-    gameGraph = data[0];
-    startSynsetId = data[1];
-    targetSynsetId = data[2];
-    totalStrikes = data[3];
-};
-
 
 function pointerSymbolToPhrase(pointerSymbol) {
     const pointerKey = {
@@ -1015,8 +660,7 @@ function pointerSymbolToPhrase(pointerSymbol) {
         ';u': 'which is associated with the usage',
         '-u': 'which is a usage sometimes associated with',
         '<': 'which is an adjective derived from the verb',
-        '<x': 'which is the root verb for the adjective',
-        // custom reflex pointer (above)
+        '<x': 'which is the root verb for the adjective',  // custom reflex pointer
         '\\': 'which is of or pertaining to',
         '\\x': 'which is the basis for',  // custom reflex pointer
         '*': 'which cannot be done without',
@@ -1027,6 +671,14 @@ function pointerSymbolToPhrase(pointerSymbol) {
     return pointerKey[pointerSymbol];
 };
 
+
+// Utility Functions
+
+function randChoice(array) {
+    if (array.length === 0) return null;
+    const index = Math.floor(Math.random() * array.length);
+    return array[index];
+};
 
 
 // ========================================

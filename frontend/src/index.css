@@ -293,9 +293,6 @@ body.win {
   /* border-top: 5px solid black; */
   /* border-bottom: 5px solid white; */
 }
-#target-margin.draw-top-line {
-  /* border-top: 5px solid white; */
-}
 body.lose #target-margin {
   border-color: red;
 }
