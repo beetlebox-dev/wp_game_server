@@ -164,9 +164,8 @@ class Game extends React.Component {
 
         if (this.state.status === 'load') return;
 
-        if (['win', 'lose'].includes(this.state.status)) {
-            document.body.classList.add(this.state.status);
-        };
+        document.body.classList.toggle('lose', this.state.status === 'lose');
+        document.body.classList.toggle('win', this.state.status === 'win');
 
         return (<>
             <StatusBar
