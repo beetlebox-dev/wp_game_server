@@ -1,17 +1,6 @@
-import { click } from '@testing-library/user-event/dist/click';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-
-
-
-
-
-
-// Are things rendering twice on initial load/mount?
-
-
-
 
 
 /*
@@ -26,8 +15,7 @@ For production: npm run build
 
 
 // game_graph[node_index] = [correct_pointers_object, decoy_pointers_object, words_str_list, pos_str, gloss_str]
-// x_pointers_object = {node_index: pointer, ... }
-// pointer = [pointer_symbol, source_word, target_word]
+// x_pointers_object = {node_index: [pointer_symbol, source_word, target_word], ... }
 
 
 // Transition animation of next synset area.
@@ -36,9 +24,8 @@ const minMaxTransRatio = 4;  // maxTransSecs / minTransSecs  // Attempts to make
 const maxTransSecs = minTransSecs * minMaxTransRatio;  // The total seconds to transition max-height property from current to 1vh.
 const transTimingFunc = 'cubic-bezier(0.6, 0, 1, 1)';
 
-
+// Length of striped area at the bottom of next synset area.
 const stripeAreaLength = 5;  // An integer. Each unit represents 1 stripe region with alternating colors on top/bottom.
-
 
 // Global variables.
 let nodeOrder, gameGraph, startSynsetId, targetSynsetId, totalStrikes;
@@ -94,7 +81,7 @@ class Game extends React.Component {
             if (prevState.status !== 'play' && prevState.status !== 'start') return {};  // No state change.
 
             const stateChangeObj = {};
-            const addToprevSynsets = [];
+            const addToPrevSynsets = [];
             let pointerRoot;
 
             if (clickedAorB !== null) {
@@ -109,7 +96,7 @@ class Game extends React.Component {
                 const wordsFromCurrToPrev = pruneDisplayWords(prevState, clickedAorB);
                 const pointerPhraseFromCurrToPrev = prevState.nextSynsets[clickedAorB].phrase;
                 const prevSynsetObj = {words: wordsFromCurrToPrev, pointer: pointerPhraseFromCurrToPrev};
-                addToprevSynsets.push(prevSynsetObj);
+                addToPrevSynsets.push(prevSynsetObj);
 
                 if (nextSynsetData.group === 1) {
 
@@ -121,7 +108,9 @@ class Game extends React.Component {
                         stateChangeObj['status'] = 'lose';
                         const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
                         const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: null};
-                        stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets, [finalPrevSynsetObj]);
+                        addToPrevSynsets.push(finalPrevSynsetObj);
+                        stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToPrevSynsets);
+                        adminAlert('lose', prevState.prevSynsets, addToPrevSynsets, prevState.targetWords);
                         return stateChangeObj;  // Skip updating nextSynsets.
                     };
                 };
@@ -150,7 +139,7 @@ class Game extends React.Component {
                         words: getFinalWordsToDisplayWin(prevState, clickedAorB, updatedPointersObj.data.connectWords[0]), 
                         pointer: updatedPointersObj.data.phrase,
                     };
-                    addToprevSynsets.push(finalPrevSynsetObj);
+                    addToPrevSynsets.push(finalPrevSynsetObj);
 
                     const allTargetWords = gameGraph[targetSynsetId][2];
                     const displayTargetWordIndex = Math.max(updatedPointersObj.data.connectWords[1], 0);  // Change -1 (any word) to 0 (first word).
@@ -160,11 +149,13 @@ class Game extends React.Component {
 
                     const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
                     const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: null};
-                    addToprevSynsets.push(finalPrevSynsetObj);
+                    addToPrevSynsets.push(finalPrevSynsetObj);
                 };
+
+                adminAlert(updatedPointersObj.result, prevState.prevSynsets, addToPrevSynsets, prevState.targetWords);
             };
 
-            stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToprevSynsets);
+            stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToPrevSynsets);
             return stateChangeObj;
         });
     };
@@ -678,6 +669,28 @@ function randChoice(array) {
     if (array.length === 0) return null;
     const index = Math.floor(Math.random() * array.length);
     return array[index];
+};
+
+function adminAlert(result, prevSynsets, latestSynsets, targetWords) {
+
+    const messageLinesArray = ['content=WORDPLAY GAME', result.toUpperCase(), ''];
+
+    for (const obj of [prevSynsets, latestSynsets]) {
+        for (const nodeObj of obj) {
+            if (nodeObj.pointer === null) messageLinesArray.push(`${nodeObj.words}  =>  xxxxxxx`);
+            else messageLinesArray.push(`${nodeObj.words}  =>  ${nodeObj.pointer}`);
+        };
+    };
+
+    if (result === 'lose') messageLinesArray.push('');
+    messageLinesArray.push(`${targetWords} (target)`);
+    const message = messageLinesArray.join('\n');
+
+    const request = new XMLHttpRequest();
+    const postURL = process.env.REACT_APP_SERVER_TERM_URL;
+    request.open("POST", postURL, true);
+    request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    request.send(message);
 };
 
 
