@@ -12,9 +12,9 @@ app = Flask(__name__, static_folder="frontend/build", static_url_path="/public")
 # Public files are requested at the root url path "/" by default. Default path can be overridden within .env files.
 
 
-# TODO: Dev environment only!
-from flask_cors import CORS
-CORS(app)
+# # Dev environment only.
+# from flask_cors import CORS
+# CORS(app)
 
 
 @app.errorhandler(404)
