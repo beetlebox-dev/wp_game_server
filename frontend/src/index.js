@@ -52,7 +52,10 @@ class Game extends React.Component {
         });
     };
 
-    resetGame() {
+    // "This" in methods is bound to Game object automatically by defining method with syntax: method = (args) => { do_something }
+    // Could also bind in render (new function created each render, subobtimal performance) with syntax: handleClick={this.method.bind(this)}
+
+    resetGame = () => {
 
         nodeOrder = Array(gameGraph.length).fill(0);
 
@@ -67,14 +70,15 @@ class Game extends React.Component {
             targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2]),
         });
 
-        this.choose();
+        this.choose('init_game');
     };
 
-    playGame() {
+    playGame = () => {
         this.setState({status: 'play'});
     };
 
-    choose(clickedAorB=null) {  // To init at game start, run choose(null).
+    choose = (clickedAorB) => {
+        // ClickedAorB can be 'a', 'b', or 'init_game' (when game is reset to the beginning).
 
         this.setState((prevState) => {
 
@@ -84,7 +88,7 @@ class Game extends React.Component {
             const addToPrevSynsets = [];
             let pointerRoot;
 
-            if (clickedAorB !== null) {
+            if (clickedAorB === 'a' || clickedAorB === 'b') {
 
                 const nextSynsetData = prevState.nextSynsets[clickedAorB];
 
@@ -119,7 +123,7 @@ class Game extends React.Component {
                 nodeOrder[pointerRoot] = prevState.stepCount + 1;
 
             } else {
-                // clickedAorB === null
+                // clickedAorB === init_game
                 pointerRoot = prevState.currentSynsetId;
                 nodeOrder[pointerRoot] = 1;
             };
@@ -194,19 +198,19 @@ class Game extends React.Component {
                 displayStatus='start'
                 text='BEGIN'
                 status={this.state.status}
-                handleClick={this.playGame.bind(this)}
+                handleClick={this.playGame}
             />
 
             <ResetButton
                 displayStatus='lose'
                 text='RESET'
                 status={this.state.status}
-                handleClick={this.resetGame.bind(this)}
+                handleClick={this.resetGame}
             />
 
             <NextSynsetArea
                 state={this.state}
-                choose={this.choose.bind(this)}
+                choose={this.choose}
             />
 
             <Target
@@ -218,7 +222,7 @@ class Game extends React.Component {
                 displayStatus='win'
                 text='RESET'
                 status={this.state.status}
-                handleClick={this.resetGame.bind(this)}
+                handleClick={this.resetGame}
             />
         </>)
     };
