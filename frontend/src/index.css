@@ -18,7 +18,6 @@ body {
   font-family: 'roboto_light', sans-serif;
   text-align: center;
   background-color: hsl(0, 0%, 8%);
-  /* background-color: hsl(0, 0%, 8%); */
 }
 body.lose {
   background-color: hsl(0, 100%, 5%);
@@ -63,7 +62,7 @@ body.win {
 .img-series {
   display: flex;
   align-items: center;
-  margin-bottom: 0.6em;
+  margin-bottom: 0.6rem;
 }
 .img-series div {
   display: flex;
@@ -113,7 +112,7 @@ body.win .full-heart.last img {
 
 /* Previous Node Area */
 #prev-synsets {
-  margin: 3vw 0;
+  margin: 0.7rem 0;  /* Match body.lose #target-margin height to #prev-synsets margin-bottom. */
   color: hsla(0, 0%, 100%, 70%);
 }
 #prev-synsets .pointer {
@@ -124,7 +123,7 @@ body.win .full-heart.last img {
 
 /* Current/Target Node Area */
 #curr-synset, #target {
-  padding: 2vw;
+  padding: 0.7rem;
   border: 5px solid hsl(313, 0%, 30%);
   color: white;
 }
@@ -135,10 +134,10 @@ body.win .full-heart.last img {
   box-sizing: border-box;
 }
 #target-margin {
-  height: 6vw;
+  height: 3rem;
 }
 body.lose #target-margin {
-  height: 3vw;
+  height: 0.7rem;  /* Match body.lose #target-margin height to #prev-synsets margin-bottom. */
 }
 
 
@@ -191,7 +190,32 @@ body.lose #target-margin {
   flex: 1;
   flex-direction: column;
   overflow-y: hidden;
-  padding: 2vw;
+  padding: 1.2rem;
+}
+
+
+/* Small screens. Vertically overlapping layout. */
+@media (max-width: 40rem) {
+
+  #next-synsets {
+    flex-direction: column;
+  }
+  #next-syn-b-gutter, #next-syn-a-gutter {
+    display: block;
+  }
+  #next-syn-a-text {
+    border-top: 5px solid hsl(133, 0%, 0%);
+    border-right: 5px solid hsl(133, 0%, 0%);
+  }
+  #next-syn-a-text, #next-syn-b-text {
+    flex: 0 0 auto;
+  }
+  #next-syn-b-text {
+    padding-right: 0;
+  }
+  #next-syn-a-text {
+    padding-left: 0;
+  }
 }
 
 
@@ -226,23 +250,4 @@ body.lose #target-margin {
 }
 .reset-button:hover {
   background-color: hsl(133, 100%, 50%);
-}
-
-
-/* Small screens. Vertically overlapping layout. */
-@media (max-width: 40rem) {
-
-  #next-synsets {
-    flex-direction: column;
-  }
-  #next-syn-b-gutter, #next-syn-a-gutter {
-    display: block;
-  }
-  #next-syn-a-text {
-    border-top: 5px solid hsl(133, 0%, 0%);
-    border-right: 5px solid hsl(133, 0%, 0%);
-  }
-  #next-syn-a-text, #next-syn-b-text {
-    flex: 0 0 auto;
-  }
 }
