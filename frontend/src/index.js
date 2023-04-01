@@ -21,7 +21,7 @@ For production: npm run build
 // Transition animation of next synset area.
 const minTransSecs = 1;  // The total seconds to transition min-height property from current to 0vh.
 const minMaxTransRatio = 4;  // maxTransSecs / minTransSecs  // Attempts to make shrink and grow timing to be the similar, assuming that average height of next synset text areas is 0.2vh.
-const maxTransSecs = minTransSecs * minMaxTransRatio;  // The total seconds to transition max-height property from current to 1vh.
+const maxTransSecs = minTransSecs * minMaxTransRatio;  // The total seconds to transition max-height property from current to 100vh.
 const transTimingFunc = 'cubic-bezier(0.6, 0, 1, 1)';
 
 // Length of striped area at the bottom of next synset area.
@@ -52,6 +52,13 @@ class Game extends React.Component {
         });
     };
 
+    componentDidUpdate() {
+        if (this.state.nextSynsetsRendered === false && this.state.status === 'play') {
+            addNextNodeLightingEventListeners();
+            this.setState({nextSynsetsRendered: true});
+        };
+    };
+
     // "This" in methods is bound to Game object automatically by defining method with syntax: method = (args) => { do_something }
     // Could also bind in render (new function created each render, subobtimal performance) with syntax: handleClick={this.method.bind(this)}
 
@@ -67,6 +74,7 @@ class Game extends React.Component {
             currentSynsetConnectWord: -1,
             currentSynsetId: startSynsetId, 
             nextSynsets: {a: null, b: null},  // {a: [0/1 means correct/decoy, nodeIndex], b: [ ... ] }
+            nextSynsetsRendered: false,
             targetWords: wordsStrFromArray(gameGraph[targetSynsetId][2]),
         });
 
@@ -176,7 +184,6 @@ class Game extends React.Component {
                 status={this.state.status}
                 currentStrikeCount={this.state.strikeCount}
                 totalStrikeCount={totalStrikes}
-                currentStepCount={this.state.stepCount}
             />
 
             <WinLoseHeading
@@ -233,14 +240,13 @@ class Game extends React.Component {
 
 function StatusBar(props) {
     if (props.status !== 'load' && props.status !== 'start') {
+        const numHearts = props.totalStrikeCount - props.currentStrikeCount;
         return (
             <div id="stats-bar">
-                <StrikeArea
-                    currentStrikeCount={props.currentStrikeCount}
-                    totalStrikeCount={props.totalStrikeCount}
-                />
-                <ArrowArea
-                    currentStepCount={props.currentStepCount}
+                <ImgSeries
+                    path="heart.png"
+                    count={numHearts}
+                    cssId="hearts"
                 />
             </div>
         );
@@ -248,38 +254,18 @@ function StatusBar(props) {
     // Else, no html.
 };
 
-function StrikeArea(props) {
+function ImgSeries(props) {
 
-    const strikeNums = Array.from(Array(props.totalStrikeCount).keys());  // strikeNums = [0, 1, ... , totalStrikeCount - 1]
+    const imgNums = Array.from(Array(props.count).keys());  // imgNums = [0, 1, ... , props.count - 1]
     return (
-        <div id="strike-area">
-            { strikeNums.map(strikeNum => renderStrikeBox(strikeNum)) }
+        <div id={props.cssId} className="img-series">
+            { imgNums.map(imgNum => renderImg(imgNum)) }
         </div>
     );
 
-    function renderStrikeBox(strikeNum) {
-        let strikeBoxContent = null;
-        if (strikeNum < props.currentStrikeCount) {
-            strikeBoxContent = <img src={process.env.PUBLIC_URL + "/red_x.png"}/>;
-        };
+    function renderImg(imgNum) {
         return (
-            <div key={strikeNum} className="strike-box">{strikeBoxContent}</div>
-        );
-    };
-};
-
-function ArrowArea(props) {
-
-    const stepNums = Array.from(Array(props.currentStepCount).keys());  // stepNums = [0, 1, ... , currentStepCount - 1]
-    return (
-        <div id="arrow-area">
-            { stepNums.map(stepNum => renderArrowImg(stepNum)) }
-        </div>
-    );
-
-    function renderArrowImg(stepNum) {
-        return (
-            <img key={stepNum} src={process.env.PUBLIC_URL + "/arrow_outline.png"}/>
+            <img key={imgNum} src={process.env.PUBLIC_URL + "/" + props.path}/>
         )
     };
 };
@@ -328,7 +314,7 @@ function CurrentSynset(props) {
         let pos = '';
         let gloss = '';
         if (props.status === 'start') {
-            heading = <><span className="endpoint-heading">START</span><br/></>;
+            heading = <><span className="endpoint-heading">YOU ARE HERE</span><br/></>;
             pos = gameGraph[props.id][3];
             gloss = gameGraph[props.id][4];    
         };
@@ -343,6 +329,61 @@ function CurrentSynset(props) {
         );
     };
 };
+
+// class NextSynsetArea extends React.Component {
+
+//     constructor(props) {
+//         super(props);
+//         this.state = {mounted: false};
+//     };
+
+//     componentDidMount() {
+//         this.setState({mounted: true});
+//     };
+
+//     componentDidUpdate(prevProps) {
+
+//     };
+
+//     renderSingleStripe(stripeNum) {
+//         let letter = 'b';
+//         if (stripeNum % 2 === 0) letter = 'a';  // Even stripe numbers are 'a'; odds are 'b'.
+//         return <div className={letter} key={stripeNum}></div>;
+//     };
+
+//     render() {
+
+//         if (props.state.status === 'play') {
+
+//             const stripeNums = Array.from(Array(stripeAreaLength).keys());  // stripeNums = [0, 1, ... , stripeAreaLength - 1]
+
+//             return (
+//                 <div id='next-synset-col'>
+//                     <div id="next-synset-area">
+//                         <div id="next-syn-a-gutter"></div>
+//                         <div id="next-synsets">
+//                             <NextSynset
+//                                 id={'b'}
+//                                 choose={props.choose}
+//                                 gameState={props.state}
+//                             />
+//                             <NextSynset
+//                                 id={'a'}
+//                                 choose={props.choose}
+//                                 gameState={props.state}
+//                             />
+//                         </div>
+//                         <div id="next-syn-b-gutter"></div>
+//                     </div>
+//                     <div id='future-choice-area'>
+//                         { stripeNums.map(stripeNum => renderSingleStripe(stripeNum)) }
+//                     </div>
+//                 </div>
+//             );
+//         };
+//         // Else, no html.
+//     };
+// };
 
 function NextSynsetArea(props) {
 
@@ -663,6 +704,29 @@ function pointerSymbolToPhrase(pointerSymbol) {
         '>x': 'which can cause',  // custom reflex pointer
     };
     return pointerKey[pointerSymbol];
+};
+
+
+// Hover Next Node CSS
+
+function addNextNodeLightingEventListeners() {
+    for (const aOrB of ['a', 'b']) {
+        const hoverElem = document.getElementById(`next-syn-${aOrB}-text`);
+        hoverElem.addEventListener('mouseenter', () => nextNodeLighting(aOrB, 'on'));
+        hoverElem.addEventListener('mouseleave', () => nextNodeLighting(aOrB, 'off'));
+    };
+    nextNodeLighting('a', 'off');
+    nextNodeLighting('b', 'off');
+};
+
+function nextNodeLighting(aOrB, offOrOn) {
+    const hue = {a: 86, b: 180};
+    const lightness = {off: 5, on: 8};  // Percent. Symbol added below.
+    const color = `hsl(${hue[aOrB]}, 100%, ${lightness[offOrOn]}%)`;
+    const hoverElem = document.getElementById(`next-syn-${aOrB}-text`);
+    const gutterElem = document.getElementById(`next-syn-${aOrB}-gutter`);
+    hoverElem.style.backgroundColor = color;
+    gutterElem.style.backgroundColor = color;
 };
 
 
