@@ -122,7 +122,7 @@ class Game extends React.Component {
                         const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: null};
                         addToPrevSynsets.push(finalPrevSynsetObj);
                         stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToPrevSynsets);
-                        adminAlert('lose', prevState.prevSynsets, addToPrevSynsets, prevState.targetWords);
+                        adminAlert('lose', prevState.prevSynsets, addToPrevSynsets, prevState.targetWords, updatedStrikeCount);
                         return stateChangeObj;  // Skip updating nextSynsets.
                     };
                 };
@@ -159,12 +159,13 @@ class Game extends React.Component {
                     
                 } else {  // updatedPointersObj.result === 'lose'
 
+                    // SHOULD NEVER HAPPEN! WIN IF ABOVE SHOULD ALWAYS HAPPEN. NEXT ADMINALERT DEPENDS ON THIS ASSUMPTION.
                     const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
                     const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: null};
                     addToPrevSynsets.push(finalPrevSynsetObj);
                 };
 
-                adminAlert(updatedPointersObj.result, prevState.prevSynsets, addToPrevSynsets, prevState.targetWords);
+                adminAlert(updatedPointersObj.result, prevState.prevSynsets, addToPrevSynsets, prevState.targetWords, prevState.strikeCount);
             };
 
             stateChangeObj['prevSynsets'] = prevState.prevSynsets.concat(addToPrevSynsets);
@@ -240,13 +241,16 @@ class Game extends React.Component {
 
 function StatusBar(props) {
     if (props.status !== 'load' && props.status !== 'start') {
-        const numHearts = props.totalStrikeCount - props.currentStrikeCount;
         return (
             <div id="stats-bar">
                 <ImgSeries
-                    path="heart.png"
-                    count={numHearts}
                     cssId="hearts"
+                    classes="full-heart"
+                    path="heart.png"
+                    count={props.totalStrikeCount - props.currentStrikeCount}
+                    classes2="empty-heart"
+                    path2="empty_heart.png"
+                    count2={props.currentStrikeCount}
                 />
             </div>
         );
@@ -255,18 +259,23 @@ function StatusBar(props) {
 };
 
 function ImgSeries(props) {
+    // Props: cssId, className, count, path, className2, count2, path2
 
     const imgNums = Array.from(Array(props.count).keys());  // imgNums = [0, 1, ... , props.count - 1]
+    const imgNums2 = Array.from(Array(props.count2).keys());  // imgNums = [0, 1, ... , props.count - 1]
+
     return (
         <div id={props.cssId} className="img-series">
-            { imgNums.map(imgNum => renderImg(imgNum)) }
+            { imgNums.map(imgNum => renderImg(imgNum, props.count, props.path, props.classes)) }
+            { imgNums2.map(imgNum => renderImg(imgNum, props.count2, props.path2, props.classes2)) }
         </div>
     );
 
-    function renderImg(imgNum) {
+    function renderImg(imgNum, totalCount, path, classes) {
+        if (imgNum + 1 === totalCount) classes += ' last';
         return (
-            <img key={imgNum} src={process.env.PUBLIC_URL + "/" + props.path}/>
-        )
+            <div className={classes} key={imgNum}><img src={process.env.PUBLIC_URL + "/" + path}/></div>
+        );
     };
 };
 
@@ -329,61 +338,6 @@ function CurrentSynset(props) {
         );
     };
 };
-
-// class NextSynsetArea extends React.Component {
-
-//     constructor(props) {
-//         super(props);
-//         this.state = {mounted: false};
-//     };
-
-//     componentDidMount() {
-//         this.setState({mounted: true});
-//     };
-
-//     componentDidUpdate(prevProps) {
-
-//     };
-
-//     renderSingleStripe(stripeNum) {
-//         let letter = 'b';
-//         if (stripeNum % 2 === 0) letter = 'a';  // Even stripe numbers are 'a'; odds are 'b'.
-//         return <div className={letter} key={stripeNum}></div>;
-//     };
-
-//     render() {
-
-//         if (props.state.status === 'play') {
-
-//             const stripeNums = Array.from(Array(stripeAreaLength).keys());  // stripeNums = [0, 1, ... , stripeAreaLength - 1]
-
-//             return (
-//                 <div id='next-synset-col'>
-//                     <div id="next-synset-area">
-//                         <div id="next-syn-a-gutter"></div>
-//                         <div id="next-synsets">
-//                             <NextSynset
-//                                 id={'b'}
-//                                 choose={props.choose}
-//                                 gameState={props.state}
-//                             />
-//                             <NextSynset
-//                                 id={'a'}
-//                                 choose={props.choose}
-//                                 gameState={props.state}
-//                             />
-//                         </div>
-//                         <div id="next-syn-b-gutter"></div>
-//                     </div>
-//                     <div id='future-choice-area'>
-//                         { stripeNums.map(stripeNum => renderSingleStripe(stripeNum)) }
-//                     </div>
-//                 </div>
-//             );
-//         };
-//         // Else, no html.
-//     };
-// };
 
 function NextSynsetArea(props) {
 
@@ -720,6 +674,9 @@ function addNextNodeLightingEventListeners() {
 };
 
 function nextNodeLighting(aOrB, offOrOn) {
+
+    if (window.matchMedia('any-hover: none').matches) return;  // If there are no available input mechanisms capable of hovering, don't use hover styling below.
+
     const hue = {a: 86, b: 180};
     const lightness = {off: 5, on: 8};  // Percent. Symbol added below.
     const color = `hsl(${hue[aOrB]}, 100%, ${lightness[offOrOn]}%)`;
@@ -738,9 +695,9 @@ function randChoice(array) {
     return array[index];
 };
 
-function adminAlert(result, prevSynsets, latestSynsets, targetWords) {
+function adminAlert(result, prevSynsets, latestSynsets, targetWords, strikeCount) {
 
-    const messageLinesArray = ['content=WORDPLAY GAME', result.toUpperCase(), ''];
+    const messageLinesArray = ['content=WORDPLAY GAME', result.toUpperCase(), `Strikes: ${strikeCount}`, ''];
 
     for (const obj of [prevSynsets, latestSynsets]) {
         for (const nodeObj of obj) {
