@@ -1,5 +1,5 @@
 
-body, #stats-bar, #strike-area, #arrow-area, #next-synset-area, #next-synsets, #next-syn-a-text, #next-syn-b-text {
+body, #stats-bar, .img-series, .img-series div, #arrow-area, #next-synset-area, #next-synsets, #next-syn-a-text, #next-syn-b-text {
   display: flex;
 }
 
@@ -60,12 +60,10 @@ body.win {
   flex-wrap: wrap;
 }
 .img-series {
-  display: flex;
   align-items: center;
   margin-bottom: 0.6rem;
 }
 .img-series div {
-  display: flex;
   align-items: center;
   justify-content: center;
   height: 2rem;
@@ -128,7 +126,7 @@ body.win .full-heart.last img {
   color: white;
 }
 #curr-synset .endpoint-heading, #target .endpoint-heading {
-  color: hsl(133, 100%, 30%);
+  color: hsl(133, 25%, 50%);
 }
 #target {
   box-sizing: border-box;

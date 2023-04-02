@@ -204,7 +204,7 @@ class Game extends React.Component {
 
             <ResetButton
                 displayStatus='start'
-                text='BEGIN'
+                text='START'
                 status={this.state.status}
                 handleClick={this.playGame}
             />
