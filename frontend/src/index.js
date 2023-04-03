@@ -678,7 +678,7 @@ function nextNodeLighting(aOrB, offOrOn) {
     if (window.matchMedia('any-hover: none').matches) return;  // If there are no available input mechanisms capable of hovering, don't use hover styling below.
 
     const hue = {a: 86, b: 180};
-    const lightness = {off: 5, on: 8};  // Percent. Symbol added below.
+    const lightness = {off: 6, on: 9};  // Percent. Symbol added below.
     const color = `hsl(${hue[aOrB]}, 100%, ${lightness[offOrOn]}%)`;
     const hoverElem = document.getElementById(`next-syn-${aOrB}-text`);
     const gutterElem = document.getElementById(`next-syn-${aOrB}-gutter`);

@@ -222,7 +222,7 @@ body.lose #target-margin {
   background-color: hsl(133, 100%, 5%);
 }
 #future-choice-area .a, #future-choice-area .b {
-  height: 4px;
+  height: 0.35rem;
 }
 #future-choice-area :first-child {
   border-top: 2px solid hsl(180, 40%, 22%);

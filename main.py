@@ -87,7 +87,6 @@ def server_terminal():
             return Response(status=400)
         content = request.form['content']
         admin_alert_thread('Web App - Log', content)
-        print(content)
         return Response(status=200)
 
 
