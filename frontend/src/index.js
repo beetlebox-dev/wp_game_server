@@ -668,15 +668,13 @@ function addNextNodeLightingEventListeners() {
         const hoverElem = document.getElementById(`next-syn-${aOrB}-text`);
         hoverElem.addEventListener('mouseenter', () => nextNodeLighting(aOrB, 'on'));
         hoverElem.addEventListener('mouseleave', () => nextNodeLighting(aOrB, 'off'));
+        hoverElem.addEventListener('touchstart', event => nextNodeTouch(event, aOrB));
     };
     nextNodeLighting('a', 'off');
     nextNodeLighting('b', 'off');
 };
 
 function nextNodeLighting(aOrB, offOrOn) {
-
-    if (window.matchMedia('any-hover: none').matches) return;  // If there are no available input mechanisms capable of hovering, don't use hover styling below.
-
     const hue = {a: 86, b: 180};
     const lightness = {off: 6, on: 9};  // Percent. Symbol added below.
     const color = `hsl(${hue[aOrB]}, 100%, ${lightness[offOrOn]}%)`;
@@ -684,6 +682,12 @@ function nextNodeLighting(aOrB, offOrOn) {
     const gutterElem = document.getElementById(`next-syn-${aOrB}-gutter`);
     hoverElem.style.backgroundColor = color;
     gutterElem.style.backgroundColor = color;
+};
+
+function nextNodeTouch(event, aOrB) {
+    // Does not move a touch screen's "pointing device" into the element, triggering a mouseenter event.
+    event.preventDefault();
+    document.getElementById(`next-syn-${aOrB}-text`).click();
 };
 
 
