@@ -8,7 +8,7 @@ body, #stats-bar, .img-series, .img-series div, #arrow-area, #next-synset-area, 
 body {
 
   /* Minimum window height with vertical center. */
-  min-height: 100vh;
+  min-height: 100dvh;
   flex-direction: column;
   justify-content: center;
   box-sizing: border-box;
