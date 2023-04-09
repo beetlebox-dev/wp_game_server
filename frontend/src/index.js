@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 
 
+// (c) 2023 Johnathan Pennington | All rights reserved.
+
+
 /*
 cd /Users/john/Desktop/Apps/GoogleCLI/beetleboxdev/sources/wp-game-server/frontend
 npm start

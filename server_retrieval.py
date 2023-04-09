@@ -3,6 +3,9 @@ import time
 from google.cloud import storage  # pip install --upgrade google-cloud-storage
 
 
+# (c) 2023 Johnathan Pennington | All rights reserved.
+
+
 BUCKET_NAME = 'app-storage-bucket'
 SUB_PATH = 'wp-game/'  # Each subfolder ends with /  # Start with nothing.
 

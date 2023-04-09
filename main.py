@@ -4,7 +4,7 @@ from admin import admin_alert_thread
 from server_retrieval import Serve
 
 
-# Copyright 2022 Johnathan Pennington | All rights reserved.
+# (c) 2023 Johnathan Pennington | All rights reserved.
 
 
 app = Flask(__name__, static_folder="frontend/build", static_url_path="/public")
