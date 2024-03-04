@@ -4,6 +4,7 @@ __pycache__/
 venv/
 
 app-storage-bucket/
+gmail_api/
 
 
 # For react below:
@@ -22,7 +23,6 @@ app-storage-bucket/
 /react/build
 
 # misc
-.DS_Store
 .env.local
 .env.development.local
 .env.test.local
