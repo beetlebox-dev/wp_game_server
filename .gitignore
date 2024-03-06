@@ -3,9 +3,9 @@
 __pycache__/
 venv/
 
-app-storage-bucket/
-gmail_api/
-
+wp-game/
+gmail_api_store/
+gmail_api_temp/
 
 # For react below:
 

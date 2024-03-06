@@ -1,10 +1,15 @@
 import time
 from flask import Flask, Response, render_template, request, url_for, redirect
 from admin import admin_alert_thread
-from server_retrieval import Serve
+from persist import Serve
 
 
 # (c) 2023 Johnathan Pennington | All rights reserved.
+
+
+STORE_BUCKET_NAME = 'app-storage-bucket'
+STORE_TOP_FOLDER = 'wp-game/'
+TEMP_TOP_FOLDER = 'UnUsEd_TeMp_FoLdEr/'
 
 
 app = Flask(__name__, static_folder="frontend/build", static_url_path="/public")
@@ -67,9 +72,9 @@ def home():
 
 @app.route('/data')
 def serve_game_data():
-    serve = Serve()
-    game_data = serve.receive('current_game.json')
-    serve.upload('game_downloaded', time.time())
+    serve = Serve(STORE_BUCKET_NAME, STORE_TOP_FOLDER, TEMP_TOP_FOLDER)
+    game_data = serve.receive('current_game.json', 'store')
+    serve.send('game_downloaded', time.time(), 'store')
     return game_data
 
 
