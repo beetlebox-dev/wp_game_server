@@ -53,6 +53,15 @@ path strings must end with a forward slash, i.e. 'parent_folder/child_folder/'."
             blob = self.get_blob(file_path)
             return blob.open(mode)
 
+    def delete(self, file_path, location='temp'):
+        if location == 'temp':
+            os.remove(file_path)
+        else:
+            blob = self.get_blob(file_path)
+            blob.delete()
+            if file_path in self.blobs:
+                del self.blobs[file_path]
+
     def receive(self, file_path, location='temp', return_string=False):
         """If return_string is True, a string is returned regardless of the source file type.
 Otherwise, a dictionary is returned from json files, or a list of lines from non-json files (i.e. txt)."""
@@ -74,24 +83,23 @@ Otherwise, a dictionary is returned from json files, or a list of lines from non
                 json.dump(new_contents, file, indent=4)
             else:
                 file.write(str(new_contents))
-        if file_path in self.blobs:
+        if not location == 'temp' and file_path in self.blobs:
             # New blob must be opened next time.
             del self.blobs[file_path]
 
-    # # TODO: untested
-    # def append(self, file_path, new_lines, location='temp'):
-    #     """New_lines is a list. Do not use for json files!"""
-    #     if location == 'temp':
-    #         new_str = '\n' + '\n'.join(new_lines)
-    #         with self.open(file_path, 'a', 'temp') as file:
-    #             file.write(new_str)  # TODO: thread?
-    #     else:
-    #         existing_lines = self.receive(file_path, 'store')
-    #         # if len(existing_lines) == 0:  # TODO: Empty file returns [''] or []? Always start witn \n?
-    #         #     existing_lines.append('')
-    #         existing_lines.extend(new_lines)
-    #         new_str = '\n'.join(existing_lines)
-    #         self.send(file_path, new_str)
+    def append(self, file_path, new_lines, location='temp'):
+        """New_lines is a list. Do not use for json files!
+If given an empty file, new_lines will appear after an empty first line."""
+        if location == 'temp':
+            new_str = '\n' + '\n'.join(new_lines)
+            with self.open(file_path, 'a', 'temp') as file:
+                file.write(new_str)  # TODO: thread?
+        else:
+            existing_lines = self.receive(file_path, 'store')
+            # Running receive() on an empty file in store returns [''].
+            existing_lines.extend(new_lines)
+            new_str = '\n'.join(existing_lines)
+            self.send(file_path, new_str, 'store')
 
     def file_to_store_from_temp(self, store_file_path, temp_file_path=None):  # TODO: thread?
         """If temp_file_path is not passed in, the corresponding temp path from store_file_path will be calculated."""
@@ -99,6 +107,8 @@ Otherwise, a dictionary is returned from json files, or a list of lines from non
             temp_file_path = self.temp_full_path(store_file_path)
         blob = self.get_blob(store_file_path)
         blob.upload_from_filename(temp_file_path)
+        # TODO: Need below as in send()???
+        #  if store_file_path in self.blobs: del self.blobs[store_file_path]
 
     def file_from_store_to_temp(self, store_file_path, temp_file_path=None):
         """If temp_file_path is not passed in, the corresponding temp path from store_file_path will be calculated."""
