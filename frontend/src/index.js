@@ -163,6 +163,8 @@ class Game extends React.Component {
                 } else {  // updatedPointersObj.result === 'lose'
 
                     // SHOULD NEVER HAPPEN! WIN IF ABOVE SHOULD ALWAYS HAPPEN. NEXT ADMINALERT DEPENDS ON THIS ASSUMPTION.
+                    console.log('Unexpected code block run!')
+                    adminAlert(updatedPointersObj.result, prevState.prevSynsets, addToPrevSynsets, prevState.targetWords, prevState.strikeCount);
                     const wordsFromClickedToPrev = getFinalWordsToDisplayLose(prevState, clickedAorB);
                     const finalPrevSynsetObj = {words: wordsFromClickedToPrev, pointer: null};
                     addToPrevSynsets.push(finalPrevSynsetObj);
@@ -722,6 +724,7 @@ function adminAlert(result, prevSynsets, latestSynsets, targetWords, strikeCount
     request.open("POST", postURL, true);
     request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     request.send(message);
+    console.log(message)
 };
 
 

@@ -1,4 +1,5 @@
 import os
+import shutil
 
 
 # Simulates the google.cloud.storage module as it runs on the Google server.
@@ -34,16 +35,19 @@ class Blob:
 
 class Bucket:
 
-    # Nothing is done with the init variable.
-    def __init__(self, foo):
+    def __init__(self, bucket_name):
+        # self.__bucket_name = bucket_name
         pass
 
     def blob(self, file_path):
         return Blob(file_path)
 
+    def copy_blob(self, blob, destination_bucket, new_name=None):
+        if new_name is None:
+            new_name = f'{blob.file_path}_copy'
+        shutil.copy(blob.file_path, new_name)
+
 
 class Client:
-
-    # Nothing is done with the init variable.
-    def bucket(self, foo):
-        return Bucket(foo)
+    def bucket(self, bucket_name):
+        return Bucket(bucket_name)

@@ -1,7 +1,7 @@
 import time
 from flask import Flask, Response, render_template, request, url_for, redirect
-from admin import admin_alert_thread
-from persist import Serve
+from beetlebox.admin import admin_alert_thread
+from beetlebox.persist import Serve
 
 
 # (c) 2023 Johnathan Pennington | All rights reserved.
